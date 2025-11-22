@@ -1,8 +1,8 @@
 根目录 go_project
-go mod init github.com/mxxmstar/learning.git
+go mod init github.com/mxxmstar/learning
 
 
 子目录 go_project/services/gate_server
-go mod init github.com/mxxmstar/learning.git/gate_server
+go mod init github.com/mxxmstar/learning/gate_server
 子目录 go_project/services/verify_server
-go mod init github.com/mxxmstar/learning.git/verify_server
+go mod init github.com/mxxmstar/learning/verify_server
