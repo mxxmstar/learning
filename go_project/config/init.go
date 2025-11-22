@@ -6,8 +6,25 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Init 初始化配置
 func Init() (*Config, error) {
-	viper.SetDefault("ENV", "dev") // 设置默认环境为 dev
+	// 环境变量
+	viper.SetDefault("server.name", "learn_mx")
+	viper.SetDefault("server.env", "dev")
+
+	// 数据库配置
+	viper.SetDefault("database.type", "mysql")
+	viper.SetDefault("database.auth_db.dsn", "root:123456@tcp(127.0.0.1:3306)/learn_mysql?charset=utf8mb4&parseTime=True&loc=Local")
+	viper.SetDefault("database.chat_db.dsn", "root:123456@tcp(127.0.0.1:3306)/learn_mysql?charset=utf8mb4&parseTime=True&loc=Local")
+	viper.SetDefault("database.file_db.dsn", "root:123456@tcp(127.0.0.1:3306)/learn_mysql?charset=utf8mb4&parseTime=True&loc=Local")
+	viper.SetDefault("database.video_db.dsn", "root:123456@tcp(127.0.0.1:3306)/learn_mysql?charset=utf8mb4&parseTime=True&loc=Local")
+
+	viper.SetDefault("database.pool.max_open_conns", 50)
+	viper.SetDefault("database.pool.max_idle_conns", 10)
+	viper.SetDefault("database.pool.conn_max_lifetime", "300s")
+	viper.SetDefault("database.pool.conn_max_idle_time", "120s")
+
+	viper.SetDefault("database.auto_migrate", true)
 
 	// 支持从 YAML 文件加载配置
 	viper.SetConfigName("config")

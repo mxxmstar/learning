@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/mxxmstar/learning/gate_server/config"
+	"github.com/mxxmstar/learning/verify_server/config"
 )
 
 func main() {

@@ -1,0 +1,56 @@
+server:
+  name: learn_mx
+  env: dev
+database:
+  # 统一数据库类型：mysql | postgres
+  type: "mysql"
+
+  # 认证库 所有服务共享
+  auth_db:
+    dsn: "user:password@tcp(127.0.0.1:3306)/auth_db?charset=utf8mb4&parseTime=True&loc=Local"
+    pool:
+      max_open_conns: 50
+      max_idle_conns: 10
+      conn_max_lifetime: "300s"
+      conn_max_idle_time: "120s"
+
+  # 聊天库（ChatServer）
+  chat_db:
+    dsn: "user:password@tcp(127.0.0.1:3306)/chat_db?charset=utf8mb4&parseTime=True&loc=Local"
+    pool:
+      max_open_conns: 50
+      max_idle_conns: 10
+      conn_max_lifetime: "300s"
+      conn_max_idle_time: "120s"
+
+  # 文件服务库（FileServer）
+  file_db:
+    dsn: "user:password@tcp(127.0.0.1:3306)/file_db?charset=utf8mb4&parseTime=True&loc=Local"
+    pool:
+      max_open_conns: 50
+      max_idle_conns: 10
+      conn_max_lifetime: "300s"
+      conn_max_idle_time: "120s"
+
+  # 视频/RTC库（VideoServer + RTCServer）
+  video_db:
+    dsn: "user:password@tcp(127.0.0.1:3306)/video_db?charset=utf8mb4&parseTime=True&loc=Local"
+    pool:
+      max_open_conns: 50
+      max_idle_conns: 10
+      conn_max_lifetime: "300s"
+      conn_max_idle_time: "120s"
+
+  # PostgreSQL（切换时只需调整 type 和这里的 dsn）
+  # auth_db:
+  #   dsn: "postgres://user:password@localhost:5432/auth_db?sslmode=disable"
+  # chat_db:
+  #   dsn: "postgres://user:password@localhost:5432/chat_db?sslmode=disable"
+  # file_db:
+  #   dsn: "postgres://user:password@localhost:5432/file_db?sslmode=disable"
+  # video_db:
+  #   dsn: "postgres://user:password@localhost:5432/video_db?sslmode=disable"
+  
+
+  # 是否自动迁移（gorm）
+  auto_migrate: true
