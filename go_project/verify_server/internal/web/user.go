@@ -4,9 +4,14 @@ import (
 	"fmt"
 
 	regexp "github.com/dlclark/regexp2"
-	"github.com/mxxmstar/learning/verify_server/config"
+	"github.com/gin-gonic/gin"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+
+	"github.com/mxxmstar/learning/pkg/database"
+	"github.com/mxxmstar/learning/verify_server/config"
+	"github.com/mxxmstar/learning/verify_server/internal/repository/dao"
 )
 
 type UserHandler struct {
@@ -23,7 +28,7 @@ type DB interface {
 	Create(value interface{}) *gorm.DB
 }
 
-func initDB(cfg *config.Config) (*gorm.DB, error) {
+func initDB(cfg *config.Config) (database.DBInterface, error) {
 	dbType := cfg.Database.Type
 	dsn := cfg.Database.AuthDB.DSN
 	var dialector gorm.Dialector
@@ -37,12 +42,12 @@ func initDB(cfg *config.Config) (*gorm.DB, error) {
 	default:
 		return nil, fmt.Errorf("unsupported db type: %s", dbType)
 	}
-	db, err := gorm.Open(dialector, &gorm.Config{})
-	if err != nil {
+	g, err := gorm.Open(dialector, &gorm.Config{})
+	if g != nil {
 		return nil, fmt.Errorf("failed to open db: %w", err)
 	}
 
-	sqlDB, err := db.DB()
+	sqlDB, err := g.DB()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get sql db: %w", err)
 	}
@@ -52,5 +57,16 @@ func initDB(cfg *config.Config) (*gorm.DB, error) {
 	sqlDB.SetMaxIdleConns(cfg.Database.Pool.MaxIdleConns)
 	sqlDB.SetConnMaxLifetime(cfg.Database.Pool.ConnMaxLifetime)
 	sqlDB.SetConnMaxIdleTime(cfg.Database.Pool.ConnMaxIdleTime)
+
+	db := database.NewGORMWrapper(g)
 	return db, nil
+}
+
+func RegisterUserRoutes(server *gin.Engine, cfg *config.Config) {
+	db, err := initDB(cfg)
+	if err != nil {
+		panic(err)
+	}
+	userDAO := dao.NewUserDAO(db)
+
 }

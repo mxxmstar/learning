@@ -1,7 +1,7 @@
 package dao
 
 import (
-	"github.com/mxxmstar/learning/config"
+	"github.com/mxxmstar/learning/pkg/config"
 	"gorm.io/gorm"
 )
 

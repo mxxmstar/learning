@@ -1,7 +1,7 @@
 package config
 
 import (
-	rootconfig "github.com/mxxmstar/learning/config"
+	rootconfig "github.com/mxxmstar/learning/pkg/config"
 )
 
 // Config 类型别名
