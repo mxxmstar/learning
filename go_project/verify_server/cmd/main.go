@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/gin-gonic/gin"
 	"github.com/mxxmstar/learning/verify_server/config"
 )
 
@@ -18,4 +19,12 @@ func main() {
 
 	// 打印配置
 	log.Printf("Config: %+v\n", cfg)
+}
+
+func initWebServer(cfg *config.Config) error {
+	server := gin.Default()
+	server.Use(func(c *gin.Context) {
+
+	})
+
 }
