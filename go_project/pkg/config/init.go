@@ -51,3 +51,17 @@ func Init() (*Config, error) {
 
 	return &cfg, nil
 }
+
+func Reload(cfg interface{}) error {
+	// 读取配置
+	if err := viper.ReadInConfig(); err != nil {
+		return fmt.Errorf("fatal error reading config file: %s", err)
+	}
+
+	// 绑定配置到结构体
+	if err := viper.Unmarshal(cfg); err != nil {
+		return fmt.Errorf("fatal error unmarshal config file: %s", err)
+	}
+
+	return nil
+}

@@ -1,34 +1,14 @@
-package web
+package verify_config
 
 import (
 	"fmt"
 
-	regexp "github.com/dlclark/regexp2"
-	"github.com/gin-gonic/gin"
-
+	"github.com/mxxmstar/learning/pkg/database"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-
-	"github.com/mxxmstar/learning/pkg/database"
-	"github.com/mxxmstar/learning/verify_server/config"
-	"github.com/mxxmstar/learning/verify_server/internal/repository/dao"
 )
 
-type UserHandler struct {
-	// sver
-
-	// emailExp 邮箱正则表达式
-	emailExp *regexp.Regexp
-	// passwordExp 密码正则表达式
-	passwordExp *regexp.Regexp
-}
-
-type DB interface {
-	AutoMigrate(dst ...interface{}) *gorm.DB
-	Create(value interface{}) *gorm.DB
-}
-
-func initDB(cfg *config.Config) (database.DBInterface, error) {
+func InitDB(cfg *Config) (database.DBInterface, error) {
 	dbType := cfg.Database.Type
 	dsn := cfg.Database.AuthDB.DSN
 	var dialector gorm.Dialector
@@ -60,13 +40,4 @@ func initDB(cfg *config.Config) (database.DBInterface, error) {
 
 	db := database.NewGORMWrapper(g)
 	return db, nil
-}
-
-func RegisterUserRoutes(server *gin.Engine, cfg *config.Config) {
-	db, err := initDB(cfg)
-	if err != nil {
-		panic(err)
-	}
-	userDAO := dao.NewUserDAO(db)
-
 }
