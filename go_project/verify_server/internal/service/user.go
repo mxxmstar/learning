@@ -12,6 +12,9 @@ var (
 	// ErrDuplicateEmail 表示邮箱已经被注册使用
 	ErrDuplicateEmail = errors.New("email already registered")
 
+	// ErrDuplicateUsername 表示用户名已经被注册使用
+	ErrDuplicateUsername = errors.New("username already registered")
+
 	// ErrInvalidUserInfo 表示用户提交的信息不符合要求
 	ErrInvalidUserInfo = errors.New("invalid user information")
 
@@ -55,6 +58,13 @@ func (s *UserService) Signup(ctx context.Context, u domain.User) error {
 		CTime:    u.CTime,
 	})
 
+	switch {
+	case errors.Is(err, repository.ErrDuplicateEmail):
+		return ErrDuplicateEmail
+	case errors.Is(err, repository.ErrDuplicateUsername):
+		return ErrDuplicateUsername
+	}
+	return err
 }
 
 // // 更新用户信息
