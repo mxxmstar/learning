@@ -54,3 +54,9 @@ database:
 
   # 是否自动迁移（gorm）
   auto_migrate: true
+
+verify_server:
+  name: verify_server
+  host: "localhost"
+  port: 8080
+  log_level: "debug"
