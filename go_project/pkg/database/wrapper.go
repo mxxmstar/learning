@@ -22,6 +22,7 @@ type DBContextInterface interface {
 type DBInterface interface {
 	// 在这里定义数据库操作方法的接口
 	WithContext(ctx context.Context) DBContextInterface
+	AutoMigrate(dst ...interface{}) error
 }
 
 // GORMContextWrapper 包装*gorm.DB实现DBContextInterface
@@ -41,6 +42,11 @@ func NewGORMWrapper(db *gorm.DB) *GORMWrapper {
 
 func (w *GORMWrapper) WithContext(ctx context.Context) DBContextInterface {
 	return &GORMContextWrapper{db: w.db.WithContext(ctx)}
+}
+
+// AutoMigrate 实现DBInterface的AutoMigrate方法
+func (w *GORMWrapper) AutoMigrate(dst ...interface{}) error {
+	return w.db.AutoMigrate(dst...)
 }
 
 // Create 实现DBContextInterface的Create方法

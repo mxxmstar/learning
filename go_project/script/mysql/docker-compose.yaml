@@ -12,7 +12,7 @@ services:
       # 设置 MYSQL 配置文件
       # - ./mysql/conf:/etc/mysql/conf.d
       # 设置初始化脚本
-      - ./script/mysql/:/docker-entrypoint-initdb.d/
+      - ./:/docker-entrypoint-initdb.d/
     ports:
         # 映射端口
         - "3308:3306"
