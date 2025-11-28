@@ -14,6 +14,10 @@ func RegisterUserRoutes(server *gin.Engine, cfg *verify_config.Config) {
 	if err != nil {
 		panic(err)
 	}
+	err = dao.InitTables(db, cfg)
+	if err != nil {
+		panic(err)
+	}
 	userDAO := dao.NewUserDAO(db)
 	userRepo := repository.NewUserRepository(userDAO)
 

@@ -38,5 +38,8 @@ func InitWebServer(cfg *verify_config.Config) *gin.Engine {
 		},
 		MaxAge: 12 * time.Hour,
 	}))
+
+	// 注册路由
+	RegisterRoutes(server, cfg)
 	return server
 }
