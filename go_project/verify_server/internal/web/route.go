@@ -1,6 +1,8 @@
 package web
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/mxxmstar/learning/verify_server/internal/repository"
 	"github.com/mxxmstar/learning/verify_server/internal/repository/dao"
@@ -18,6 +20,9 @@ func RegisterUserRoutes(server *gin.Engine, cfg *verify_config.Config) {
 	if err != nil {
 		panic(err)
 	}
+	log.Println("Database tables initialized successfully.")
+
+	// 初始化仓库
 	userDAO := dao.NewUserDAO(db)
 	userRepo := repository.NewUserRepository(userDAO)
 
