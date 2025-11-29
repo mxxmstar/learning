@@ -55,6 +55,9 @@ database:
   # 是否自动迁移（gorm）
   auto_migrate: true
 
+redis1:
+  host: "localhost"
+
 verify_server:
   name: verify_server
   host: "localhost"
