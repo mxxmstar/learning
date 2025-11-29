@@ -1,4 +1,4 @@
-package gate_config
+package statusconfig
 
 import (
 	"log"
@@ -6,15 +6,14 @@ import (
 	"github.com/mxxmstar/learning/pkg/config"
 )
 
-type GateServerConfig struct {
+type StatusServerConfig struct {
 	Name string `mapstructure:"name"`
 	Host string `mapstructure:"host"`
 	Port int    `mapstructure:"port"`
-	// LogLevel string `mapstructure:"log_level"`
 }
 
 type Config struct {
-	GateServer     GateServerConfig `mapstructure:"gate_server"`
+	StatusServer   StatusServerConfig `mapstructure:"status_server"`
 	*config.Config `mapstructure:",squash"`
 }
 
