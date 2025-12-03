@@ -107,12 +107,12 @@ func (l *DistributedLock) Lock(ctx context.Context, retryInterval time.Duration)
 // Unlock 释放锁（安全释放：只有持有者才能释放）
 func (l *DistributedLock) Unlock(ctx context.Context) error {
 	script := `
-if redis.call("get", KEYS[1]) == ARGV[1] then
-    return redis.call("del", KEYS[1])
-else
-    return 0
-end
-`
+				if redis.call("get", KEYS[1]) == ARGV[1] then
+					return redis.call("del", KEYS[1])
+				else
+					return 0
+				end
+			`
 	result, err := l.client.Eval(ctx, script, []string{l.key}, l.value).Result()
 	if err != nil {
 		return err
@@ -137,12 +137,12 @@ func (l *DistributedLock) StartAutoRefresh(ctx context.Context, refreshInterval 
 			case <-ticker.C:
 				// 尝试延长锁时间（仅当仍持有锁时）
 				_, err := l.client.Eval(ctx, `
-if redis.call("get", KEYS[1]) == ARGV[1] then
-    return redis.call("pexpire", KEYS[1], ARGV[2])
-else
-    return 0
-end
-`, []string{l.key}, l.value, int64(l.duration/time.Millisecond)).Result()
+											if redis.call("get", KEYS[1]) == ARGV[1] then
+												return redis.call("pexpire", KEYS[1], ARGV[2])
+											else
+												return 0
+											end
+										`, []string{l.key}, l.value, int64(l.duration/time.Millisecond)).Result()
 				if err != nil {
 					// 可记录日志，但不中断
 					continue
