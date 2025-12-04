@@ -35,7 +35,7 @@ func RegisterUserRoutes(server *gin.Engine, cfg *verify_config.Config) {
 	// 注册用户处理器
 	userHandler := handler.NewUserHandler(userService)
 
-	// 注册用户相关路由
+	// 注册用户注册相关路由
 	authGroup := server.Group("/user/auth")
 	{
 		authGroup.POST("/signup", authHandler.SignupHandler)

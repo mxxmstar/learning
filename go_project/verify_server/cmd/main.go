@@ -22,5 +22,6 @@ func main() {
 	// 初始化服务
 	server := web.InitWebServer(cfg)
 	// 启动服务
-	server.Run(fmt.Sprintf(":%d", cfg.VerifyServer.Port))
+	// server.Run(fmt.Sprintf(":%d", cfg.VerifyServer.Port))
+	server.Run(fmt.Sprintf("0.0.0.0:%d", cfg.VerifyServer.Port))
 }

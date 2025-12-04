@@ -9,6 +9,7 @@ import (
 	"github.com/mxxmstar/learning/pkg/logger"
 	"github.com/mxxmstar/learning/verify_server/internal/domain"
 	"github.com/mxxmstar/learning/verify_server/internal/service"
+	"github.com/mxxmstar/learning/verify_server/internal/web/response"
 )
 
 type AuthAndler struct {
@@ -35,7 +36,7 @@ func (h *AuthAndler) SignupHandler(ctx *gin.Context) {
 		Email           string `json:"email"`
 		Username        string `json:"username"`
 		Password        string `json:"password"`
-		ConfirmPassword string `json:"confirm_password"`
+		ConfirmPassword string `json:"confirmPassword"`
 	}
 
 	var req SignupRequest
@@ -47,26 +48,28 @@ func (h *AuthAndler) SignupHandler(ctx *gin.Context) {
 
 	ok, err := h.emailExp.MatchString(req.Email)
 	if err != nil {
-		ctx.String(http.StatusOK, "system error")
+		ctx.JSON(http.StatusOK, response.ErrorResponse("system error", nil))
+		return
 	}
 
 	if !ok {
-		ctx.String(http.StatusOK, "email format error")
+		ctx.JSON(http.StatusOK, response.ErrorResponse("email format error", nil))
 		return
 	}
 
 	ok, err = h.passwordExp.MatchString(req.Password)
 	if err != nil {
-		ctx.String(http.StatusOK, "system error")
+		ctx.JSON(http.StatusOK, response.ErrorResponse("system error", nil))
+		return
 	}
 
 	if !ok {
-		ctx.String(http.StatusOK, "password format error")
+		ctx.JSON(http.StatusOK, response.ErrorResponse("password format error", nil))
 		return
 	}
 
 	if req.Password != req.ConfirmPassword {
-		ctx.String(http.StatusOK, "password confirmation does not match")
+		ctx.JSON(http.StatusOK, response.ErrorResponse("password confirmation does not match", nil))
 		return
 	}
 
@@ -77,20 +80,20 @@ func (h *AuthAndler) SignupHandler(ctx *gin.Context) {
 		Password: req.Password,
 	})
 	if err == service.ErrUserEmailConflict {
-		ctx.String(http.StatusOK, "email already has been registered.")
+		ctx.JSON(http.StatusOK, response.ErrorResponse("email already has been registered.", nil))
 		return
 	}
 	if err == service.ErrUserUsernameConflict {
-		ctx.String(http.StatusOK, "username already has been registered.")
+		ctx.JSON(http.StatusOK, response.ErrorResponse("username already has been registered.", nil))
 		return
 	}
 
 	if err != nil {
-		ctx.String(http.StatusOK, "system error.")
+		ctx.JSON(http.StatusOK, response.ErrorResponse("system error.", nil))
 		return
 	}
 
-	ctx.String(http.StatusOK, "signup success.")
+	ctx.JSON(http.StatusOK, response.SuccessResponse("signup success.", nil))
 	log.Println("signup success")
 	logger.LogAuth(ctx, "signup", true, "signup success")
 }
