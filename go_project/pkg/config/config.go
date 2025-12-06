@@ -42,6 +42,9 @@ type DatabaseConfig struct {
 	AutoMigrate bool `mapstructure:"auto_migrate"`
 }
 
+type RedisConfig struct {
+}
+
 // 主配置结构
 type Config struct {
 	// 环境变量

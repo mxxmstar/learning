@@ -12,6 +12,7 @@ import (
 )
 
 func RegisterUserRoutes(server *gin.Engine, cfg *verify_config.Config) {
+	// 初始化数据库
 	db, err := verify_config.InitDB(cfg)
 	if err != nil {
 		panic(err)
@@ -22,12 +23,15 @@ func RegisterUserRoutes(server *gin.Engine, cfg *verify_config.Config) {
 	}
 	log.Println("Database tables initialized successfully.")
 
+	// 初始化Redis客户端
+	redisClient := verify_config.InitRedis(cfg)
+
 	// 初始化仓库
 	userDAO := dao.NewUserDAO(db)
 	userRepo := repository.NewUserRepository(userDAO)
 
 	// 初始化服务
-	authService := service.NewAuthService(userRepo)
+	authService := service.NewAuthService(userRepo, redisClient)
 	userService := service.NewUserService(userRepo)
 
 	// 注册用户处理器

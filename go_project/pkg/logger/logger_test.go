@@ -82,7 +82,7 @@ func TestFormatLog(t *testing.T) {
 	ctxWithTraceID := WithTraceID(context.Background())
 
 	// 测试 FormatLog 函数
-	FormatLog(ctxWithTraceID, zap.InfoLevel, "测试日志", zap.String("key", "value"))
+	FormatLog(ctxWithTraceID, "info", "测试日志", zap.String("key", "value"))
 
 	// {"level":"INFO","ts":"2025-09-25T14:30:00.123+08:00","caller":"logger_test.go:80",
 	// "msg":"测试日志","trace_id":"a1b2c3d4e5f6g7h8","context":"[Conn:conn123][Trace:a1b2c3d4e5f6g7h8]",

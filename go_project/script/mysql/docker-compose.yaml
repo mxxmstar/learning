@@ -17,12 +17,12 @@ services:
         # 映射端口
         - "3308:3306"
 
-  # redis:
-  #   image: bitnami/redis:latest
-  #   # restart: always
-  #   environment:
-  #     #  不用密码
-  #     - ALLOW_EMPTY_PASSWORD=yes
-  #     # REDIS_PASSWORD: 123456
-  #   ports:
-  #     - "6379:6379"
+  redis:
+    image: bitnami/redis:latest
+    # restart: always
+    environment:
+      #  不用密码
+      - ALLOW_EMPTY_PASSWORD=yes
+      # REDIS_PASSWORD: 123456
+    ports:
+      - "6379:6379"

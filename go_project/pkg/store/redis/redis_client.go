@@ -44,6 +44,7 @@ func (rc *RedisClient) Del(ctx context.Context, keys ...string) error {
 	return rc.client.Del(ctx, keys...).Err()
 }
 
+// 延长键的过期时间
 func (rc *RedisClient) Expire(ctx context.Context, key string, expiration time.Duration) error {
 	return rc.client.Expire(ctx, key, expiration).Err()
 }
