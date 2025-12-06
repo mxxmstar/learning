@@ -1,4 +1,4 @@
-package session_testn
+package token_session
 
 import (
 	"crypto/rand"
