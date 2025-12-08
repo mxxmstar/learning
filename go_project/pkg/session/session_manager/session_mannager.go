@@ -1,18 +1,20 @@
-package session
+package session_manager
 
 import (
 	"sync"
 	"time"
+
+	"github.com/mxxmstar/learning/pkg/session"
 )
 
 type SessionManager struct {
-	sessions map[SessionID]*BaseSession
+	sessions map[session.SessionID]*session.BaseSession
 	mutex    *sync.RWMutex
 }
 
 func NewSessionManager() *SessionManager {
 	r := &SessionManager{
-		sessions: make(map[SessionID]*BaseSession),
+		sessions: make(map[session.SessionID]*session.BaseSession),
 		mutex:    &sync.RWMutex{},
 	}
 
@@ -21,17 +23,17 @@ func NewSessionManager() *SessionManager {
 	return r
 }
 
-func (m *SessionManager) GetSession(connID string) (*BaseSession, bool) {
+func (m *SessionManager) GetSession(connID string) (*session.BaseSession, bool) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	session, ok := m.sessions[SessionID(connID)]
+	session, ok := m.sessions[session.SessionID(connID)]
 	if !ok || session.IsExpired() {
 		return nil, false
 	}
 	return session, ok
 }
 
-func (m *SessionManager) AddSession(session *BaseSession) {
+func (m *SessionManager) AddSession(session *session.BaseSession) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	m.sessions[session.ID] = session
@@ -40,13 +42,13 @@ func (m *SessionManager) AddSession(session *BaseSession) {
 func (m *SessionManager) RemoveSession(connID string) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	delete(m.sessions, SessionID(connID))
+	delete(m.sessions, session.SessionID(connID))
 }
 
-func (m *SessionManager) GetSessionsByType(sessionType SessionType) []*BaseSession {
+func (m *SessionManager) GetSessionsByType(sessionType session.SessionType) []*session.BaseSession {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	sessions := make([]*BaseSession, 0)
+	sessions := make([]*session.BaseSession, 0)
 	for _, session := range m.sessions {
 		if session.Type == sessionType && !session.IsExpired() {
 			sessions = append(sessions, session)

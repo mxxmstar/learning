@@ -30,7 +30,7 @@ func InitLogger() {
 	zap.ReplaceGlobals(logger)
 }
 
-func FormatLog(ctx context.Context, level zapcore.Level, msg string, fields ...zap.Field) {
+func FormatLog(ctx context.Context, level string, msg string, fields ...zap.Field) {
 	// 获取 traceID
 	traceID := GetTraceID(ctx)
 
@@ -46,15 +46,15 @@ func FormatLog(ctx context.Context, level zapcore.Level, msg string, fields ...z
 
 	// 记录日志
 	switch level {
-	case zap.DebugLevel:
+	case "debug", "DEBUG":
 		zap.L().Debug(msg, fields...)
-	case zap.InfoLevel:
+	case "info", "INFO":
 		zap.L().Info(msg, fields...)
-	case zap.WarnLevel:
+	case "warn", "WARN":
 		zap.L().Warn(msg, fields...)
-	case zap.ErrorLevel:
+	case "error", "ERROR":
 		zap.L().Error(msg, fields...)
-	case zap.FatalLevel:
+	case "fatal", "FATAL":
 		zap.L().Fatal(msg, fields...)
 	default:
 		zap.L().Info(msg, fields...)
@@ -71,7 +71,7 @@ func LogAuth(ctx context.Context, action string, success bool, msg string) {
 	if msg != "" {
 		fields = append(fields, zap.String("msg", msg))
 	}
-	FormatLog(ctx, zap.InfoLevel, "auth", fields...)
+	FormatLog(ctx, "info", "auth", fields...)
 }
 
 func LogRouter(ctx context.Context, route string, duration time.Duration) {
@@ -79,5 +79,5 @@ func LogRouter(ctx context.Context, route string, duration time.Duration) {
 		zap.String("route", route),
 		zap.Duration("duration", duration),
 	}
-	FormatLog(ctx, zap.InfoLevel, "router", fields...)
+	FormatLog(ctx, "info", "router", fields...)
 }

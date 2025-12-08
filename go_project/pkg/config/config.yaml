@@ -8,6 +8,10 @@ database:
   # 认证库 所有服务共享
   auth_db:
     dsn: "root:root@tcp(127.0.0.1:3308)/auth_db?charset=utf8mb4&parseTime=True&loc=Local"
+    charset: "utf8mb4"
+    conn_timeout: "5s"
+    read_timeout: "3s"
+    write_timeout: "3s"
     pool:
       max_open_conns: 50
       max_idle_conns: 10
@@ -50,12 +54,13 @@ database:
   #   dsn: "postgres://user:password@localhost:5432/file_db?sslmode=disable"
   # video_db:
   #   dsn: "postgres://user:password@localhost:5432/video_db?sslmode=disable"
-  
+
 
   # 是否自动迁移（gorm）
   auto_migrate: true
 
 redis1:
+
   host: "localhost"
 
 verify_server:

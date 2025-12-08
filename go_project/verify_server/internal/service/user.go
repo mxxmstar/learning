@@ -1,10 +1,8 @@
 package service
 
 import (
-	"context"
 	"errors"
 
-	"github.com/mxxmstar/learning/verify_server/internal/domain"
 	"github.com/mxxmstar/learning/verify_server/internal/repository"
 )
 
@@ -29,42 +27,6 @@ type UserService struct {
 
 func NewUserService(repo *repository.UserRepository) *UserService {
 	return &UserService{repo: repo}
-}
-
-func validateUser(u domain.User) error {
-	if u.Username == "" || u.Email == "" || u.Password == "" {
-		return ErrInvalidUserInfo
-	}
-	// 校验邮箱格式
-	// if !isValidEmail(u.Email) {
-	// 	return ErrInvalidUserInfo
-	// }
-	if len(u.Password) < 6 {
-		return ErrInvalidUserInfo
-	}
-	return nil
-}
-
-// 注册新用户
-func (s *UserService) Signup(ctx context.Context, u domain.User) error {
-	if err := validateUser(u); err != nil {
-		return err
-	}
-	err := s.repo.CreateUser(ctx, &domain.User{
-		Id:       u.Id,
-		Username: u.Username,
-		Email:    u.Email,
-		Password: u.Password, // 先不加密，后续再处理
-		CTime:    u.CTime,
-	})
-
-	switch {
-	case errors.Is(err, repository.ErrDuplicateEmail):
-		return ErrDuplicateEmail
-	case errors.Is(err, repository.ErrDuplicateUsername):
-		return ErrDuplicateUsername
-	}
-	return err
 }
 
 // // 更新用户信息
