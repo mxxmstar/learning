@@ -1,10 +1,15 @@
-package statusconfig
+package status_config
 
 import (
 	"log"
 
 	"github.com/mxxmstar/learning/pkg/config"
 )
+
+type StatusServiceConfig struct {
+	CleanupInterval  int `mapstructure:"cleanup_interval"`
+	HeartbeatTimeout int `mapstructure:"heartbeat_timeout"`
+}
 
 type StatusServerConfig struct {
 	Name string `mapstructure:"name"`
@@ -13,7 +18,8 @@ type StatusServerConfig struct {
 }
 
 type Config struct {
-	StatusServer   StatusServerConfig `mapstructure:"status_server"`
+	StatusServer   StatusServerConfig  `mapstructure:"status_server"`
+	StatusService  StatusServiceConfig `mapstructure:"status_service"`
 	*config.Config `mapstructure:",squash"`
 }
 

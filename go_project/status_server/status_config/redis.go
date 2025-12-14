@@ -1,4 +1,4 @@
-package verify_config
+package status_config
 
 import "github.com/mxxmstar/learning/pkg/store/redis"
 

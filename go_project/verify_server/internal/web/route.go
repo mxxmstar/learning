@@ -24,7 +24,10 @@ func RegisterUserRoutes(server *gin.Engine, cfg *verify_config.Config) {
 	log.Println("Database tables initialized successfully.")
 
 	// 初始化Redis客户端
-	redisClient := verify_config.InitRedis(cfg)
+	redisClient, err := verify_config.InitRedis(cfg)
+	if err != nil {
+		panic(err)
+	}
 
 	// 初始化仓库
 	userDAO := dao.NewUserDAO(db)

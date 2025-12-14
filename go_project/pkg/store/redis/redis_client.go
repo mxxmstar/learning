@@ -29,6 +29,10 @@ func NewRedisClient(addr string, password string, db int) *RedisClient {
 	return &RedisClient{client: client}
 }
 
+func (rc *RedisClient) GetClient() *redis.Client {
+	return rc.client
+}
+
 // 设置键值对，过期时间为expiration(可选)
 func (rc *RedisClient) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error {
 	_, err := rc.client.Set(ctx, key, value, expiration).Result()
@@ -52,6 +56,36 @@ func (rc *RedisClient) Expire(ctx context.Context, key string, expiration time.D
 // Eval 执行 Lua 脚本
 func (rc *RedisClient) Eval(ctx context.Context, script string, keys []string, args ...interface{}) *redis.Cmd {
 	return rc.client.Eval(ctx, script, keys, args...)
+}
+
+// ZRange 获取有序集合指定范围内的元素
+func (rc *RedisClient) ZRange(ctx context.Context, key string, start, stop int64) *redis.StringSliceCmd {
+	return rc.client.ZRange(ctx, key, start, stop)
+}
+
+// ZAdd 添加元素到有序集合中
+func (rc *RedisClient) ZAdd(ctx context.Context, key string, score float64, member string) *redis.IntCmd {
+	return rc.client.ZAdd(ctx, key, redis.Z{Score: score, Member: member})
+}
+
+// ZRem 删除有序集合中的一个或多个元素
+func (rc *RedisClient) ZRem(ctx context.Context, key string, members ...interface{}) *redis.IntCmd {
+	return rc.client.ZRem(ctx, key, members...)
+}
+
+// ZScore 获取有序集合中指定成员的分数
+func (rc *RedisClient) ZScore(ctx context.Context, key string, member string) *redis.FloatCmd {
+	return rc.client.ZScore(ctx, key, member)
+}
+
+// HGet 获取哈希表中指定字段的值
+func (rc *RedisClient) HGet(ctx context.Context, key, field string) *redis.StringCmd {
+	return rc.client.HGet(ctx, key, field)
+}
+
+// HSet 设置哈希表中的字段值
+func (rc *RedisClient) HSet(ctx context.Context, key, field string, value interface{}) *redis.IntCmd {
+	return rc.client.HSet(ctx, key, field, value)
 }
 
 // ---------- 分布式锁 ----------

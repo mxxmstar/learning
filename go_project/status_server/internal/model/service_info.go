@@ -13,6 +13,7 @@ type ServiceInfo struct {
 	IDC           string `json:"idc" redis:"idc"`                       // 数据中心ID
 }
 
+// metadata 中存储的内容：
 // MaxLoad       int    `json:"max_load"`       // 最大负载
 // Load          int    `json:"load"`           // 当前负载
 // UpdatedAt     int64  `json:"updated_at"`     // 最后更新时间
