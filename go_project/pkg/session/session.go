@@ -1,6 +1,7 @@
 package session
 
 import (
+	"errors"
 	"sync"
 	"time"
 )
@@ -15,6 +16,8 @@ const (
 	WebSession           SessionType = "web"
 	IMAuthSession        SessionType = "im_auth"
 )
+
+var ErrJWTManagerNotSet = errors.New("jwt manager not set")
 
 // SessionID 会话ID,唯一标识符
 type SessionID string

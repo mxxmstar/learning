@@ -6,17 +6,21 @@ import (
 	"github.com/mxxmstar/learning/pkg/config"
 )
 
+type VerifyServiceConfig struct {
+	JWTSecret     string `mapstructure:"jwt_secret"`
+	TokenLifeTime int    `mapstructure:"token_lifetime"`
+}
+
 type VerifyServerConfig struct {
 	Name string `mapstructure:"name"`
 	Host string `mapstructure:"host"`
 	Port int    `mapstructure:"port"`
-	// JWTSecret     string `mapstructure:"jwt_secret"`
-	// TokenLifeTime int    `mapstructure:"token_lifetime"`
 	// LogLevel string `mapstructure:"log_level"`
 }
 
 type Config struct {
-	VerifyServer   VerifyServerConfig `mapstructure:"verify_server"`
+	VerifyServer   VerifyServerConfig  `mapstructure:"verify_server"`
+	VerifyService  VerifyServiceConfig `mapstructure:"verify_service"`
 	*config.Config `mapstructure:",squash"`
 }
 

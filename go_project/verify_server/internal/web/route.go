@@ -34,10 +34,10 @@ func RegisterUserRoutes(server *gin.Engine, cfg *verify_config.Config) {
 	userRepo := repository.NewUserRepository(userDAO)
 
 	// 初始化服务
-	authService := service.NewAuthService(userRepo, redisClient)
+	authService := service.NewAuthService(userRepo, redisClient, cfg.VerifyService.JWTSecret, cfg.VerifyService.TokenLifeTime)
 	userService := service.NewUserService(userRepo)
 
-	// 注册用户处理器
+	// 注册用户验证处理器
 	authHandler := handler.NewAuthHandler(authService, userService)
 	// 注册用户处理器
 	userHandler := handler.NewUserHandler(userService)

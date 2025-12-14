@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"time"
 
+	jwt_manager "github.com/mxxmstar/learning/pkg/jwt"
 	"github.com/mxxmstar/learning/pkg/session"
 )
 
@@ -16,10 +17,11 @@ type LoginTokenSession struct {
 	DeviceID    string
 	CreatedAt   time.Time
 	Permissions []string // 用户权限列表
+	JWTManager  *jwt_manager.JWT
 }
 
-func GenerateToken() (string, error) {
-	bytes := make([]byte, 16)
+func GenerateToken(byteCnt int) (string, error) {
+	bytes := make([]byte, byteCnt)
 	if _, err := rand.Read(bytes); err != nil {
 		return "", err
 	}
@@ -27,7 +29,8 @@ func GenerateToken() (string, error) {
 }
 
 func NewLoginTokenSession(userID uint64, deviceID string, permissions []string, ttl time.Duration) (*LoginTokenSession, error) {
-	token, err := GenerateToken()
+	byteCnt := 16
+	token, err := GenerateToken(byteCnt)
 	if err != nil {
 		return nil, err
 	}
@@ -49,10 +52,34 @@ func NewLoginTokenSession(userID uint64, deviceID string, permissions []string, 
 	return session, nil
 }
 
+// 创建支持 JWT 的登录令牌会话
+func NewLoginTokenSessionWithJWT(userID uint64, deviceID string, permissions []string, ttl time.Duration, jwtManager *jwt_manager.JWT) (*LoginTokenSession, error) {
+	session, err := NewLoginTokenSession(userID, deviceID, permissions, ttl)
+	if err != nil {
+		return nil, err
+	}
+
+	// 设置JWT管理器
+	session.JWTManager = jwtManager
+
+	return session, nil
+}
+
 func (lts *LoginTokenSession) GetToken() string {
 	lts.BaseSession.RLock()
 	defer lts.BaseSession.RUnlock()
 	return lts.Token
+}
+
+func (lts *LoginTokenSession) GenerateJWTToken() (string, error) {
+	lts.BaseSession.RLock()
+	defer lts.BaseSession.RUnlock()
+
+	if lts.JWTManager == nil {
+		return "", session.ErrJWTManagerNotSet
+	}
+
+	return lts.JWTManager.GenerateToken(lts.UserID, lts.DeviceID)
 }
 
 func (lts *LoginTokenSession) ValidatePermission(permission string) bool {

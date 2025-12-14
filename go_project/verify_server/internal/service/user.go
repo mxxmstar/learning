@@ -13,9 +13,6 @@ var (
 	// ErrDuplicateUsername 表示用户名已经被注册使用
 	ErrDuplicateUsername = errors.New("username already registered")
 
-	// ErrInvalidUserInfo 表示用户提交的信息不符合要求
-	ErrInvalidUserInfo = errors.New("invalid user information")
-
 	// ErrUserNotFound 表示未找到指定用户
 	ErrUserNotFound = errors.New("user not found")
 )
