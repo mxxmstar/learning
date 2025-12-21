@@ -152,3 +152,112 @@ func (h *AuthAndler) LoginHandler(ctx *gin.Context) {
 func (h *AuthAndler) OAuthHandler(ctx *gin.Context) {
 	println("OAuthHandler")
 }
+
+// 验证 session
+func (h *AuthAndler) VerifySessionHandler(ctx *gin.Context) {
+	type VerifySessionRequest struct {
+		SessionID string `json:"sessionId"`
+	}
+
+	type VerifySessionResponse struct {
+		Valid  bool   `json:"valid"`
+		UserId uint64 `json:"userId"`
+		Error  string `json:"error,omitempty"`
+	}
+
+	var req VerifySessionRequest
+	if err := ctx.Bind(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, VerifySessionResponse{
+			Valid: false,
+			Error: "invalid request",
+		})
+		return
+	}
+
+	// 从 Redis 中获取用户信息
+	user, err := h.authService.GetSessionUser(ctx, req.SessionID)
+	if err != nil {
+		ctx.JSON(http.StatusOK, VerifySessionResponse{
+			Valid: false,
+			Error: "invalid or expired session",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, VerifySessionResponse{
+		Valid:  true,
+		UserId: user.Id,
+	})
+}
+
+func (h *AuthAndler) VerifyJWTHandler(ctx *gin.Context) {
+	type VerifyJWTRequest struct {
+		JWTToken string `json:"jwtToken"`
+	}
+
+	type VerifyJWTResponse struct {
+		Valid    bool   `json:"valid"`
+		UserId   uint64 `json:"userId,omitempty"`
+		DeviceId string `json:"deviceId,omitempty"`
+		Error    string `json:"error,omitempty"`
+	}
+
+	var req VerifyJWTRequest
+	if err := ctx.Bind(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, VerifyJWTResponse{
+			Valid: false,
+			Error: "invalid request",
+		})
+		return
+	}
+
+	// 验证 JWT 令牌
+	claims, err := h.authService.ValidateAndParseJWT(req.JWTToken)
+	if err != nil {
+		ctx.JSON(http.StatusOK, VerifyJWTResponse{
+			Valid: false,
+			Error: "invalid or expired jwt token",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, VerifyJWTResponse{
+		Valid:    true,
+		UserId:   claims.UserID,
+		DeviceId: claims.DeviceID,
+	})
+}
+
+func (h *AuthAndler) RefreshSessionHandler(ctx *gin.Context) {
+	type RefreshSessionRequest struct {
+		SessionID string `json:"sessionId"`
+	}
+
+	type RefreshSessionResponse struct {
+		Success bool   `json:"success"`
+		Error   string `json:"error,omitempty"`
+	}
+
+	var req RefreshSessionRequest
+	if err := ctx.Bind(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, RefreshSessionResponse{
+			Success: false,
+			Error:   "invalid request",
+		})
+		return
+	}
+
+	// 刷新 session
+	err := h.authService.RefreshSession(ctx, req.SessionID)
+	if err != nil {
+		ctx.JSON(http.StatusOK, RefreshSessionResponse{
+			Success: false,
+			Error:   "failed to refresh session",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, RefreshSessionResponse{
+		Success: true,
+	})
+}

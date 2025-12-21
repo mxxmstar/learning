@@ -156,6 +156,12 @@ func (s *AuthService) Logout(ctx context.Context, sessionID string) error {
 	return s.redisClient.Del(ctx, key)
 }
 
+// RefreshSession 刷新session的过期时间
+func (s *AuthService) RefreshSession(ctx context.Context, sessionID string) error {
+	key := "session:" + sessionID
+	return s.redisClient.Expire(ctx, key, SessionTTL)
+}
+
 // 验证并解析 JWT 令牌
 func (s *AuthService) ValidateAndParseJWT(token string) (*jwt_manager.CustomClaims, error) {
 	// 解析JWT

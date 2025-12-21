@@ -43,17 +43,35 @@ func RegisterUserRoutes(server *gin.Engine, cfg *verify_config.Config) {
 	userHandler := handler.NewUserHandler(userService)
 
 	// 注册用户注册相关路由
-	authGroup := server.Group("/user/auth")
-	{
-		authGroup.POST("/signup", authHandler.SignupHandler)
-		authGroup.POST("/login", authHandler.LoginHandler)
-		authGroup.POST("/oauth", authHandler.OAuthHandler)
+	if cfg.Env == "test" {
+		authGroup := server.Group("/user/auth")
+		{
+			authGroup.POST("/signup", authHandler.SignupHandler)
+			authGroup.POST("/login", authHandler.LoginHandler)
+			authGroup.POST("/oauth", authHandler.OAuthHandler)
+		}
 	}
-	// 注册用户相关路由
-	userGroup := server.Group("/user")
+
+	// 注册用户注册相关路由（与 gate 通信
+	gateAuthGroup := server.Group("gate/user/auth")
 	{
-		userGroup.GET("/profile", userHandler.ProfileHandler)
-		userGroup.PUT("/profile", userHandler.UpdateProfileHandler)
+		gateAuthGroup.POST("/signup", authHandler.SignupHandler)
+		gateAuthGroup.POST("/login", authHandler.LoginHandler)
+		gateAuthGroup.POST("/oauth", authHandler.OAuthHandler)
+	}
+
+	// 注册用户相关路由
+	if cfg.Env == "test" {
+		userGroup := server.Group("/user")
+		{
+			userGroup.GET("/profile", userHandler.ProfileHandler)
+			userGroup.PUT("/profile", userHandler.UpdateProfileHandler)
+		}
+	}
+	gateUserGroup := server.Group("gate/user")
+	{
+		gateUserGroup.GET("/profile", userHandler.ProfileHandler)
+		gateUserGroup.PUT("/profile", userHandler.UpdateProfileHandler)
 	}
 
 }

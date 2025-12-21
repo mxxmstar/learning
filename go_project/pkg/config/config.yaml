@@ -1,6 +1,6 @@
 server:
-  name: learn_mx
-  env: dev
+  name: "learn_mx"
+  env: "test"
 database:
   # 统一数据库类型：mysql | postgres
   type: "mysql"
