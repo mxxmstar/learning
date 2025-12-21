@@ -1,8 +1,10 @@
 package service
 
 import (
+	"context"
 	"errors"
 
+	"github.com/mxxmstar/learning/verify_server/internal/domain"
 	"github.com/mxxmstar/learning/verify_server/internal/repository"
 )
 
@@ -24,6 +26,10 @@ type UserService struct {
 
 func NewUserService(repo *repository.UserRepository) *UserService {
 	return &UserService{repo: repo}
+}
+
+func (s *UserService) GetUserByEmail(ctx context.Context, email string) (*domain.User, error) {
+	return s.repo.GetUserByEmail(ctx, email)
 }
 
 // // 更新用户信息

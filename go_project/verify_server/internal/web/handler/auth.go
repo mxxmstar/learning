@@ -99,6 +99,53 @@ func (h *AuthAndler) SignupHandler(ctx *gin.Context) {
 }
 
 func (h *AuthAndler) LoginHandler(ctx *gin.Context) {
+	type LoginRequest struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+		DeviceId string `json:"deviceId"`
+	}
+
+	var req LoginRequest
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+
+	// 创建登录上下文
+	loginCtx := &domain.LoginContext{
+		DeviceId:  req.DeviceId,
+		IPAddress: ctx.ClientIP(),
+		// UserAgent: ctx.GetHeader("User-Agent"),
+		UserAgent: ctx.Request.UserAgent(),
+	}
+
+	// 传统 session 登录方式
+	sessionID, err := h.authService.LoginByEmail(ctx, req.Email, req.Password, loginCtx)
+	if err != nil {
+		ctx.JSON(http.StatusOK, response.ErrorResponse("invalid username or password", nil))
+		return
+	}
+
+	// 获取用户信息生成 JWT 令牌
+	user, err := h.userService.GetUserByEmail(ctx, req.Email)
+	if err != nil {
+		ctx.JSON(http.StatusOK, response.ErrorResponse("login success but failed to generate jwt token", nil))
+		return
+	}
+
+	jwtToken, err := h.authService.GenerateJWT(user, loginCtx)
+	if err != nil {
+		ctx.JSON(http.StatusOK, response.ErrorResponse("login success but failed to generate jwt token", nil))
+		return
+	}
+
+	responseData := map[string]interface{}{
+		"sessionId": sessionID,
+		"jwtToken":  jwtToken,
+		"userId":    user.Id,
+	}
+
+	ctx.Header("x-jwt-token", jwtToken) // 将 JWT 令牌添加到响应头中
+	ctx.JSON(http.StatusOK, response.SuccessResponse("login success", responseData))
 	println("LoginHandler")
 }
 

@@ -20,6 +20,7 @@ type LoginTokenSession struct {
 	JWTManager  *jwt_manager.JWT
 }
 
+// 生成传统的 session 字符串
 func GenerateToken(byteCnt int) (string, error) {
 	bytes := make([]byte, byteCnt)
 	if _, err := rand.Read(bytes); err != nil {
@@ -52,6 +53,12 @@ func NewLoginTokenSession(userID uint64, deviceID string, permissions []string, 
 	return session, nil
 }
 
+func (lts *LoginTokenSession) GetToken() string {
+	lts.BaseSession.RLock()
+	defer lts.BaseSession.RUnlock()
+	return lts.Token
+}
+
 // 创建支持 JWT 的登录令牌会话
 func NewLoginTokenSessionWithJWT(userID uint64, deviceID string, permissions []string, ttl time.Duration, jwtManager *jwt_manager.JWT) (*LoginTokenSession, error) {
 	session, err := NewLoginTokenSession(userID, deviceID, permissions, ttl)
@@ -63,12 +70,6 @@ func NewLoginTokenSessionWithJWT(userID uint64, deviceID string, permissions []s
 	session.JWTManager = jwtManager
 
 	return session, nil
-}
-
-func (lts *LoginTokenSession) GetToken() string {
-	lts.BaseSession.RLock()
-	defer lts.BaseSession.RUnlock()
-	return lts.Token
 }
 
 func (lts *LoginTokenSession) GenerateJWTToken() (string, error) {
