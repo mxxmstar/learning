@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package auth;
+option go_package = "./proto";
+
+
+// 认证服务
+service Auth {
+    // 验证 session
+    rpc VerifySession(VerifySessionRequest) returns (VerifySessionResponse) {}
+
+    // 验证 JWT
+    rpc VerifyJWT(VerifyJWTRequest) returns (VerifyJWTResponse) {}
+
+    // 刷新 session
+    rpc RefreshSession(RefreshSessionRequest) returns (RefreshSessionResponse) {}
+
+    // 用户登录
+    rpc LoginByEmail(LoginByEmailRequest) returns (LoginByEmailResponse) {}
+
+    // 用户注册
+    rpc SignUp(SignUpRequest) returns (SignUpResponse) {}
+}
+
+message VerifySessionRequest {
+    string session_id = 1;
+}
+
+message VerifySessionResponse {
+    bool valid = 1;
+    string user_id = 2;
+    string error = 3;
+}
+
+message VerifyJWTRequest {
+    string jwt_token = 1;
+}
+
+message VerifyJWTResponse {
+    bool valid = 1;
+    string user_id = 2;
+    string device_id = 3;
+    string error = 4;
+}
+
+message RefreshSessionRequest {
+    string session_id = 1;
+}
+
+message RefreshSessionResponse {
+    bool success = 1;
+    string error = 2;
+}
+
+message LoginByEmailRequest {
+    string email = 1;
+    string password = 2;
+    string device_id = 3;
+}
+
+message LoginByEmailResponse {
+    string session_id = 1;
+    string jwt_token = 2;
+    string user_id = 3;
+    string error = 4;
+}
+
+message SignUpRequest {
+    string email = 1;
+    string username = 2;
+    string password = 3;
+    string confirm_password = 4;
+}
+
+message SignUpResponse {
+    bool success = 1;
+    string error = 2;
+}

@@ -52,7 +52,7 @@ func RegisterUserRoutes(server *gin.Engine, cfg *verify_config.Config) {
 		}
 	}
 
-	// 注册用户注册相关路由（与 gate 通信
+	// 注册用户注册相关路由（与 gate 通信）
 	gateAuthGroup := server.Group("gate/user/auth")
 	{
 		gateAuthGroup.POST("/signup", authHandler.SignupHandler)
