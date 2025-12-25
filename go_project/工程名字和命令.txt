@@ -1,0 +1,11 @@
+根目录 go_project
+go mod init github.com/mxxmstar/learning
+
+
+子目录 go_project/services/gate_server
+go mod init github.com/mxxmstar/learning/gate_server
+子目录 go_project/services/verify_server
+go mod init github.com/mxxmstar/learning/verify_server
+
+
+.\protoc.exe --go_out=. --go-grpc_out=. --proto_path=proto proto/auth.proto

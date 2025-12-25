@@ -28,7 +28,7 @@ message VerifySessionRequest {
 
 message VerifySessionResponse {
     bool valid = 1;
-    string user_id = 2;
+    uint64 user_id = 2;
     string error = 3;
 }
 
@@ -38,7 +38,7 @@ message VerifyJWTRequest {
 
 message VerifyJWTResponse {
     bool valid = 1;
-    string user_id = 2;
+    uint64 user_id = 2;
     string device_id = 3;
     string error = 4;
 }
@@ -61,7 +61,7 @@ message LoginByEmailRequest {
 message LoginByEmailResponse {
     string session_id = 1;
     string jwt_token = 2;
-    string user_id = 3;
+    uint64 user_id = 3;
     string error = 4;
 }
 
