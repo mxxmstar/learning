@@ -2,14 +2,23 @@ package websocket
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/json"
+	"fmt"
+	"net/http"
 	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/mxxmstar/learning/gate_server/internal/conn"
+	auth_user "github.com/mxxmstar/learning/gate_server/internal/user_auth"
 	"github.com/mxxmstar/learning/pkg/logger"
 	"go.uber.org/zap"
 )
+
+type MessageHandler interface {
+	HandleMessage(ctx context.Context, conn conn.Connection, envelope *Envelope) error
+}
 
 // client 与 server 通信的消息格式
 type Envelope struct {
@@ -24,6 +33,7 @@ type Envelope struct {
 type wsConnection struct {
 	connID    string
 	userID    uint64
+	deviceID  string
 	ws        *websocket.Conn
 	SendChan  chan []byte            // 发送消息的 channel
 	closed    atomic.Bool            // 是否关闭
@@ -73,141 +83,132 @@ func (c *wsConnection) Close(reason string) error {
 	return nil
 }
 
-// const (
-// 	authTimeout     = 5 * time.Second  // 验证 token 超时时间
-// 	sessionTTl      = 300              // session 过期时间
-// 	pongwait        = 60 * time.Second // 读超时
-// 	pingPeriod      = 25 * time.Second // ping 间隔
-// 	readBufferSize  = 1024
-// 	writeBufferSize = 1024
-// )
+const (
+	authTimeout     = 5 * time.Second  // 验证 token/session 超时时间 (ValidateTokenOrSession)
+	sessionTTl      = 300              // session 过期时间
+	pongwait        = 60 * time.Second // 读超时
+	pingPeriod      = 25 * time.Second // ping 间隔
+	readBufferSize  = 1024
+	writeBufferSize = 1024
+)
 
 // NotifyOldFunc 通知旧连接关闭
 type NotifyOldFunc func(ctx context.Context, oldConnID string)
 
-// type websocketServer struct {
-// 	gateID   string
-// 	mgr      conn.ConnectionManager
-// 	verifier conn.Verifier
-//     store     *storage.Store
-// 	notifyOld NotifyOldFunc
-// 	upgrader  websocket.Upgrader
-// 	srvMux    *http.ServeMux
-// }
-// func NewWebsocketServer(
-// 	gateID string,
-// 	mgr conn.ConnectionManager,
-// 	verifier auth.Verifier,
-// 	store *storage.Store,
-// 	notifyOld NotifyOldFunc,
-// ) *WebsocketServer {
-// 	s := &WebsocketServer{
-// 		gateID:    gateID,
-// 		mgr:       mgr,
-// 		verifier:  verifier,
-// 		store:     store,
-// 		notifyOld: notifyOld,
-// 		upgrader: websocket.Upgrader{
-// 			ReadBufferSize:  readBufferSize,
-// 			WriteBufferSize: writeBufferSize,
-// 			CheckOrigin: func(r *http.Request) bool {
-// 				return true // TODO: 生产环境限制 Origin
-// 			},
-// 		},
-// 	}
-// 	mux := http.NewServeMux()
-// 	mux.HandleFunc("/ws", s.handleWS)
-// 	s.srvMux = mux
-// 	return s
-// }
+type WebsocketServer struct {
+	gateID    string
+	mgr       conn.ConnectionManager
+	auth      auth_user.AuthService     // 验证服务
+	handlers  map[string]MessageHandler // 消息处理器映射
+	store     interface{}               // TODO:会话管理，连接状态存储，踢掉旧连接，用户在线状态管理，分布式存储
+	notifyOld NotifyOldFunc
+	upgrader  websocket.Upgrader
+}
 
-// func (s *WebsocketServer) Router() http.Handler {
-// 	return s.srvMux
-// }
+func NewWebsocketServer(
+	gateID string,
+	mgr conn.ConnectionManager,
+	auth auth_user.AuthService,
+	store interface{},
+	notifyOld NotifyOldFunc,
+) *WebsocketServer {
+	s := &WebsocketServer{
+		gateID:    gateID,
+		mgr:       mgr,
+		auth:      auth,
+		handlers:  make(map[string]MessageHandler),
+		store:     store,
+		notifyOld: notifyOld,
+		upgrader: websocket.Upgrader{
+			ReadBufferSize:  readBufferSize,
+			WriteBufferSize: writeBufferSize,
+			CheckOrigin: func(r *http.Request) bool {
+				return true // TODO: 生产环境限制 Origin
+			},
+		},
+	}
+	return s
+}
 
-// func (s *WebsocketServer) handleWS(w http.ResponseWriter, r *http.Request) {
-// 	ws, err := s.upgrader.Upgrade(w, r, nil)
-// 	if err != nil {
-// 		log.Printf("[ws] upgrade failed: %v", err)
-// 		return
-// 	}
-// 	defer ws.Close()
+// 注册消息处理器,由消息处理器处理各种业务消息
+func (s *WebsocketServer) RegisterHandler(msgType string, handler MessageHandler) {
+	s.handlers[msgType] = handler
+}
 
-// 	_ = ws.SetReadDeadline(time.Now().Add(authTimeout))
-// 	_, msg, err := ws.ReadMessage()
-// 	if err != nil {
-// 		log.Printf("[ws] read auth message failed: %v", err)
-// 		return
-// 	}
+// 处理新连接和初始认证
+func (s *WebsocketServer) handleNewConnectioon(w http.ResponseWriter, r *http.Request) {
+	// 升级为 websocket
+	ws, err := s.upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		logger.FormatLog(r.Context(), "error", fmt.Sprintf("[ws] upgrade failed: %v", err))
+		return
+	}
+	defer ws.Close()
 
-// 	var env Envelope
-// 	if err := json.Unmarshal(msg, &env); err != nil || env.Type != "auth" {
-// 		log.Printf("[ws] invalid auth frame")
-// 		_ = ws.WriteMessage(websocket.TextMessage, []byte(`{"type":"auth_nack","reason":"invalid format"}`))
-// 		return
-// 	}
+	// 读取并处理认证消息
+	_ = ws.SetReadDeadline(time.Now().Add(authTimeout)) // 设置读超时
+	_, msg, err := ws.ReadMessage()
+	if err != nil {
+		logger.FormatLog(r.Context(), "error", fmt.Sprintf("[ws] read auth message failed: %v", err))
+		return
+	}
 
-// 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
-// 	ar, err := s.verifier.ValidateToken(ctx, env.Token, env.DeviceID)
-// 	cancel()
-// 	if err != nil {
-// 		log.Printf("[ws] auth failed: %v", err)
-// 		_ = ws.WriteMessage(websocket.TextMessage, []byte(`{"type":"auth_nack","reason":"auth failed"}`))
-// 		return
-// 	}
+	var envelope Envelope
+	if err := json.Unmarshal(msg, &envelope); err != nil || envelope.Type != "auth" {
+		logger.FormatLog(r.Context(), "error", fmt.Sprintf("[ws] invalid auth message: %v", err))
+		return
+	}
 
-// 	connID := fmt.Sprintf("%s#%s", s.gateID, randUUID())
-// 	oldConn, err := s.store.SwapSessionAtomic(r.Context(), ar.UserID, env.DeviceID, connID, sessionTTL)
-// 	if err != nil {
-// 		log.Printf("[ws] session swap failed: %v", err)
-// 		_ = ws.WriteMessage(websocket.TextMessage, []byte(`{"type":"auth_nack","reason":"session error"}`))
-// 		return
-// 	}
+	// 执行认证
+	ctx, cancel := context.WithTimeout(r.Context(), authTimeout)
+	authResult, err := s.auth.ValidateTokenOrSession(ctx, envelope.Token, envelope.SessionID, envelope.DeviceID)
+	cancel()
+	if err != nil || !authResult.Valid {
+		logger.FormatLog(r.Context(), "error", fmt.Sprintf("[ws] auth failed: %v, error: %s", err, authResult.Error))
+		_ = ws.WriteMessage(websocket.TextMessage, []byte(`"type":"auth_nack","reason":"auth failed"}`))
+		return
+	}
 
-// 	if oldConn != "" && oldConn != connID {
-// 		log.Printf("[ws] old connection %s exists for user %d device %s", oldConn, ar.UserID, env.DeviceID)
-// 		if s.notifyOld != nil {
-// 			go func() {
-// 				ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-// 				defer cancel()
-// 				s.notifyOld(ctx, oldConn)
-// 			}()
-// 		}
-// 	}
+	// 创建连接对象并注册
+	// connID := logger.NewTraceID()
+	connID := fmt.Sprintf("%s#%s", s.gateID, s.randUUID())
+	wsConn := &wsConnection{
+		connID:    connID,
+		userID:    authResult.UserID,
+		deviceID:  authResult.DeviceID,
+		ws:        ws,
+		SendChan:  make(chan []byte, 256),
+		closeChan: make(chan struct{}),
+		mgr:       s.mgr,
+	}
 
-// 	wc := &wsConnection{
-// 		connID:  connID,
-// 		userID:  ar.UserID,
-// 		ws:      ws,
-// 		sendCh:  make(chan []byte, 128),
-// 		closeCh: make(chan struct{}),
-// 		mgr:     s.mgr,
-// 	}
+	if err := s.mgr.Register(wsConn); err != nil {
+		logger.FormatLog(r.Context(), "error", fmt.Sprintf("[ws] register failed: %v", err))
+		_ = ws.WriteMessage(websocket.TextMessage, []byte(`"type":"auth_nack","reason":"register ws connection failed"}`))
+		return
+	}
 
-// 	if err := s.mgr.Register(wc); err != nil {
-// 		log.Printf("[ws] register failed: %v", err)
-// 		_ = ws.WriteMessage(websocket.TextMessage, []byte(`{"type":"auth_nack","reason":"internal"}`))
-// 		return
-// 	}
+	// 发送认证成功响应 TODO
+	ack := map[string]interface{}{
+		"type":        "auth_ack",
+		"conn_id":     connID,
+		"session_ttl": sessionTTl,
+		"server_time": time.Now().Unix(),
+		// "body": map[string]interface{}{
+		// 	"conn_id": connID,
+		// },
+	}
+	ackBytes, _ := json.Marshal(ack)
+	if err := ws.WriteMessage(websocket.TextMessage, ackBytes); err != nil {
+		logger.FormatLog(r.Context(), "error", fmt.Sprintf("[ws] write auth ack failed: %v", err))
+		ws.Close()
+		return
+	}
 
-// 	ack := map[string]interface{}{
-// 		"type":        "auth_ok",
-// 		"conn_id":     connID,
-// 		"session_ttl": sessionTTL,
-// 		"server_time": time.Now().Unix(),
-// 	}
-// 	ackb, _ := json.Marshal(ack)
-// 	if err := ws.WriteMessage(websocket.TextMessage, ackb); err != nil {
-// 		log.Printf("[ws] send ack failed: %v", err)
-// 		wc.Close("write ack failed")
-// 		return
-// 	}
-
-// 	go s.readPump(wc)
-// 	go s.writePump(wc)
-// }
-
-// // --- Pumps ---
+	// 启动消息处理协程
+	go s.readPump(wsConn)
+	go s.writePump(wsConn)
+}
 
 // func (s *WebsocketServer) readPump(wc *wsConnection) {
 // 	defer wc.Close("read pump exit")
@@ -221,7 +222,7 @@ type NotifyOldFunc func(ctx context.Context, oldConnID string)
 
 // 	for {
 // 		select {
-// 		case <-wc.closeCh:
+// 		case <-wc.closeChan:
 // 			return
 // 		default:
 // 		}
@@ -229,22 +230,34 @@ type NotifyOldFunc func(ctx context.Context, oldConnID string)
 // 		_, msg, err := ws.ReadMessage()
 // 		if err != nil {
 // 			if !websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-// 				log.Printf("[conn %s] read error: %v", wc.connID, err)
+// 				logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] read error: %v", wc.connID, err))
 // 			}
 // 			return
 // 		}
 
-// 		var m map[string]interface{}
-// 		if err := json.Unmarshal(msg, &m); err == nil {
-// 			if t, ok := m["type"].(string); ok {
-// 				switch t {
-// 				case "ping":
-// 					_ = wc.Send([]byte(`{"type":"pong"}`))
-// 					continue
-// 				}
-// 			}
+// 		// 解析消息并路由到相应的处理器
+// 		var envelope Envelope
+// 		if err := json.Unmarshal(msg, &envelope); err != nil {
+// 			logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] unmarshal message error: %v", wc.connID, err))
+// 			continue
 // 		}
-// 		// 默认：忽略未知消息（或记录）
+
+// 		// 特殊处理 ping 消息
+// 		if envelope.Type == "ping" {
+// 			_ = wc.Send([]byte(`{"type":"pong"}`))
+// 			continue
+// 		}
+
+// 		// 查找并执行对应的消息处理器
+// 		if handler, exists := s.handlers[envelope.Type]; exists {
+// 			ctx := context.WithValue(context.Background(), "conn", wc)
+// 			if err := handler.HandleMessage(ctx, wc, &envelope); err != nil {
+// 				logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] handle message error: %v", wc.connID, err))
+// 			}
+// 		} else {
+// 			// 未知消息类型，可以选择忽略或记录日志
+// 			logger.FormatLog(context.Background(), "warn", fmt.Sprintf("[conn %s] unknown message type: %s", wc.connID, envelope.Type))
+// 		}
 // 	}
 // }
 
@@ -258,31 +271,31 @@ type NotifyOldFunc func(ctx context.Context, oldConnID string)
 // 	ws := wc.ws
 // 	for {
 // 		select {
-// 		case <-wc.closeCh:
+// 		case <-wc.closeChan:
 // 			return
-// 		case msg, ok := <-wc.sendCh:
+// 		case msg, ok := <-wc.SendChan:
 // 			if !ok {
 // 				_ = ws.WriteMessage(websocket.CloseMessage, nil)
 // 				return
 // 			}
 // 			_ = ws.SetWriteDeadline(time.Now().Add(5 * time.Second))
 // 			if err := ws.WriteMessage(websocket.TextMessage, msg); err != nil {
-// 				log.Printf("[conn %s] write error: %v", wc.connID, err)
+// 				logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] write error: %v", wc.connID, err))
 // 				return
 // 			}
 // 		case <-ticker.C:
 // 			_ = ws.SetWriteDeadline(time.Now().Add(5 * time.Second))
 // 			if err := ws.WriteMessage(websocket.PingMessage, nil); err != nil {
-// 				log.Printf("[conn %s] ping error: %v", wc.connID, err)
+// 				logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] ping error: %v", wc.connID, err))
 // 				return
 // 			}
 // 		}
 // 	}
 // }
 
-// // 工具函数
-// func randUUID() string {
-// 	b := make([]byte, 16)
-// 	_, _ = rand.Read(b)
-// 	return fmt.Sprintf("%x", b)
-// }
+// 工具函数
+func (s *WebsocketServer) randUUID() string {
+	b := make([]byte, 16)
+	_, _ = rand.Read(b)
+	return fmt.Sprintf("%x", b)
+}
