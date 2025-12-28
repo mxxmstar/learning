@@ -11,6 +11,13 @@ type VerifyGRPCServerConfig struct {
 	Port int    `mapstructure:"port"`
 }
 
+type VerifyServerConfig struct {
+	Name                   string                 `mapstructure:"name"`
+	Host                   string                 `mapstructure:"host"`
+	Port                   int                    `mapstructure:"port"`
+	VerifyGRPCServerConfig VerifyGRPCServerConfig `mapstructure:"verify_server"`
+}
+
 type GateServerConfig struct {
 	Name string `mapstructure:"name"`
 	Host string `mapstructure:"host"`
@@ -19,9 +26,9 @@ type GateServerConfig struct {
 }
 
 type Config struct {
-	GateServer       GateServerConfig       `mapstructure:"gate_server"`
-	VerifyGRPCServer VerifyGRPCServerConfig `mapstructure:"verify_grpc"`
-	*config.Config   `mapstructure:",squash"`
+	GateServer     GateServerConfig   `mapstructure:"gate_server"`
+	VerifyServer   VerifyServerConfig `mapstructure:"verify_grpc"`
+	*config.Config `mapstructure:",squash"`
 }
 
 func Init() (*Config, error) {

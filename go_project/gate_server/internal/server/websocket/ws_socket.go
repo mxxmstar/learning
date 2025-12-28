@@ -13,10 +13,11 @@ import (
 
 // client 与 server 通信的消息格式
 type Envelope struct {
-	Type     string                 `json:"type"`
-	Token    string                 `json:"token,omitempty"`
-	DeviceID string                 `json:"device_id,omitempty"`
-	Body     map[string]interface{} `json:"body,omitempty"` // 消息体 方便扩展
+	Type      string                 `json:"type"`
+	Token     string                 `json:"token,omitempty"`
+	SessionID string                 `json:"session_id,omitempty"`
+	DeviceID  string                 `json:"device_id,omitempty"`
+	Body      map[string]interface{} `json:"body,omitempty"` // 消息体 方便扩展
 }
 
 // wsConnection 实现 conn.Connection 接口
@@ -72,14 +73,14 @@ func (c *wsConnection) Close(reason string) error {
 	return nil
 }
 
-const (
-	authTimeout     = 5 * time.Second
-	sessionTTl      = 300
-	pongwait        = 60 * time.Second
-	pingPeriod      = 25 * time.Second
-	readBufferSize  = 1024
-	writeBufferSize = 1024
-)
+// const (
+// 	authTimeout     = 5 * time.Second  // 验证 token 超时时间
+// 	sessionTTl      = 300              // session 过期时间
+// 	pongwait        = 60 * time.Second // 读超时
+// 	pingPeriod      = 25 * time.Second // ping 间隔
+// 	readBufferSize  = 1024
+// 	writeBufferSize = 1024
+// )
 
 // NotifyOldFunc 通知旧连接关闭
 type NotifyOldFunc func(ctx context.Context, oldConnID string)

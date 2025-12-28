@@ -44,7 +44,7 @@ func RegisterUserRoutes(server *gin.Engine, cfg *verify_config.Config) {
 
 	// 注册用户注册相关路由
 	if cfg.Env == "test" {
-		authGroup := server.Group("/user/auth")
+		authGroup := server.Group("/user-auth")
 		{
 			authGroup.POST("/signup", authHandler.SignupHandler)
 			authGroup.POST("/login", authHandler.LoginHandler)
@@ -53,11 +53,11 @@ func RegisterUserRoutes(server *gin.Engine, cfg *verify_config.Config) {
 	}
 
 	// 注册用户注册相关路由（与 gate 通信）
-	gateAuthGroup := server.Group("gate/user/auth")
+	gateAuthGroup := server.Group("gate/user-auth")
 	{
-		gateAuthGroup.POST("/signup", authHandler.SignupHandler)
-		gateAuthGroup.POST("/login", authHandler.LoginHandler)
-		gateAuthGroup.POST("/oauth", authHandler.OAuthHandler)
+		gateAuthGroup.POST("/verify-session", authHandler.VerifySessionHandler)
+		gateAuthGroup.POST("/verify-jwt", authHandler.VerifyJWTHandler)
+		gateAuthGroup.POST("/refresh-session", authHandler.RefreshSessionHandler)
 	}
 
 	// 注册用户相关路由
