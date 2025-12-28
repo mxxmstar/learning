@@ -6,24 +6,29 @@ import (
 	"net"
 
 	"github.com/mxxmstar/learning/pkg/logger"
+	pb "github.com/mxxmstar/learning/proto"
 	"github.com/mxxmstar/learning/verify_server/internal/service"
-	pb "github.com/mxxmstar/learning/verify_server/proto"
 	"github.com/mxxmstar/learning/verify_server/verify_config"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
+type GRPCService struct {
+	authService  *service.AuthService
+	useerService *service.UserService
+}
+
 // GRPCServer gRPC 服务器结构体
 type GRPCServer struct {
-	authService *service.AuthService
+	grpcService *GRPCService
 	config      *verify_config.Config
 	server      *grpc.Server
 }
 
-func NewGRPCServer(authService *service.AuthService, config *verify_config.Config) *GRPCServer {
+func NewGRPCServer(grpcService *GRPCService, config *verify_config.Config) *GRPCServer {
 	return &GRPCServer{
-		authService: authService,
+		grpcService: grpcService,
 		config:      config,
 	}
 }
@@ -40,7 +45,8 @@ func (s *GRPCServer) Start() error {
 	s.server = grpc.NewServer()
 
 	// 注册服务
-	authService := NewAuthService(s.authService)
+	authService := NewAuthService(s.grpcService.authService)
+	// userService := NewUserService(s.useerService)
 	pb.RegisterAuthServer(s.server, authService)
 
 	// 在开发环境中启用反射服务，以便使用 gRPC 客户端工具进行调试

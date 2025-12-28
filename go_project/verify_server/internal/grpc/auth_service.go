@@ -3,9 +3,9 @@ package grpc_server
 import (
 	"context"
 
+	pb "github.com/mxxmstar/learning/proto"
 	"github.com/mxxmstar/learning/verify_server/internal/domain"
 	"github.com/mxxmstar/learning/verify_server/internal/service"
-	pb "github.com/mxxmstar/learning/verify_server/proto"
 )
 
 type AuthService struct {

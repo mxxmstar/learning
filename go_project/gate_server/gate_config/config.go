@@ -6,6 +6,11 @@ import (
 	"github.com/mxxmstar/learning/pkg/config"
 )
 
+type VerifyGRPCServerConfig struct {
+	Host string `mapstructure:"host"`
+	Port int    `mapstructure:"port"`
+}
+
 type GateServerConfig struct {
 	Name string `mapstructure:"name"`
 	Host string `mapstructure:"host"`
@@ -14,8 +19,9 @@ type GateServerConfig struct {
 }
 
 type Config struct {
-	GateServer     GateServerConfig `mapstructure:"gate_server"`
-	*config.Config `mapstructure:",squash"`
+	GateServer       GateServerConfig       `mapstructure:"gate_server"`
+	VerifyGRPCServer VerifyGRPCServerConfig `mapstructure:"verify_grpc"`
+	*config.Config   `mapstructure:",squash"`
 }
 
 func Init() (*Config, error) {
