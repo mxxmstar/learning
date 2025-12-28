@@ -11,6 +11,11 @@ type VerifyServiceConfig struct {
 	TokenLifeTime int    `mapstructure:"token_lifetime"`
 }
 
+type VerifyGRPCServerConfig struct {
+	Host string `mapstructure:"host"`
+	Port int    `mapstructure:"port"`
+}
+
 type VerifyServerConfig struct {
 	Name string `mapstructure:"name"`
 	Host string `mapstructure:"host"`
@@ -19,9 +24,10 @@ type VerifyServerConfig struct {
 }
 
 type Config struct {
-	VerifyServer   VerifyServerConfig  `mapstructure:"verify_server"`
-	VerifyService  VerifyServiceConfig `mapstructure:"verify_service"`
-	*config.Config `mapstructure:",squash"`
+	VerifyServer     VerifyServerConfig     `mapstructure:"verify_server"`
+	VerifyService    VerifyServiceConfig    `mapstructure:"verify_service"`
+	VerifyGRPCServer VerifyGRPCServerConfig `mapstructure:"verify_grpc"`
+	*config.Config   `mapstructure:",squash"`
 }
 
 func Init() (*Config, error) {
