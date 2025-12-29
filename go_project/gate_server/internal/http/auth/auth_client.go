@@ -1,4 +1,4 @@
-package http_client
+package http_auth_client
 
 import (
 	"bytes"

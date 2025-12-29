@@ -3,8 +3,8 @@ package auth_user
 import (
 	"context"
 
-	grpc_client "github.com/mxxmstar/learning/gate_server/internal/grpc"
-	http_client "github.com/mxxmstar/learning/gate_server/internal/http"
+	grpc_auth_client "github.com/mxxmstar/learning/gate_server/internal/grpc/auth"
+	http_auth_client "github.com/mxxmstar/learning/gate_server/internal/http/auth"
 )
 
 // 验证服务接口
@@ -22,20 +22,20 @@ type AuthResult struct {
 }
 
 type GRPCAuthService struct {
-	authService *grpc_client.AuthClient
+	authService *grpc_auth_client.AuthClient
 }
 
 type HTTPAuthService struct {
-	authService *http_client.AuthClient
+	authService *http_auth_client.AuthClient
 }
 
-func NewGRPCAuthService(authService *grpc_client.AuthClient) *GRPCAuthService {
+func NewGRPCAuthService(authService *grpc_auth_client.AuthClient) *GRPCAuthService {
 	return &GRPCAuthService{
 		authService: authService,
 	}
 }
 
-func NewHTTPAuthService(authService *http_client.AuthClient) *HTTPAuthService {
+func NewHTTPAuthService(authService *http_auth_client.AuthClient) *HTTPAuthService {
 	return &HTTPAuthService{
 		authService: authService,
 	}

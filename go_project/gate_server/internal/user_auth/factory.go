@@ -1,8 +1,8 @@
 package auth_user
 
 import (
-	grpc_client "github.com/mxxmstar/learning/gate_server/internal/grpc"
-	http_client "github.com/mxxmstar/learning/gate_server/internal/http"
+	auth_client "github.com/mxxmstar/learning/gate_server/internal/grpc/auth"
+	http_auth_client "github.com/mxxmstar/learning/gate_server/internal/http/auth"
 )
 
 type AuthUserType string
@@ -12,7 +12,7 @@ const (
 	AuthUserHTTP AuthUserType = "http"
 )
 
-func NewAuthService(authUserType AuthUserType, g *grpc_client.AuthClient, h *http_client.AuthClient) AuthService {
+func NewAuthService(authUserType AuthUserType, g *auth_client.AuthClient, h *http_auth_client.AuthClient) AuthService {
 	switch authUserType {
 	case AuthUserGRPC:
 		return NewGRPCAuthService(g)

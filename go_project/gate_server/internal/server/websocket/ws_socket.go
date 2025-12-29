@@ -16,6 +16,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// MessageHandler 定义消息处理器接口
 type MessageHandler interface {
 	HandleMessage(ctx context.Context, conn conn.Connection, envelope *Envelope) error
 }
@@ -156,6 +157,7 @@ func (s *WebsocketServer) handleNewConnectioon(w http.ResponseWriter, r *http.Re
 	var envelope Envelope
 	if err := json.Unmarshal(msg, &envelope); err != nil || envelope.Type != "auth" {
 		logger.FormatLog(r.Context(), "error", fmt.Sprintf("[ws] invalid auth message: %v", err))
+		_ = ws.WriteMessage(websocket.TextMessage, []byte(`{"type":"auth_nack","reason":"invalid format"}`))
 		return
 	}
 
@@ -201,7 +203,7 @@ func (s *WebsocketServer) handleNewConnectioon(w http.ResponseWriter, r *http.Re
 	ackBytes, _ := json.Marshal(ack)
 	if err := ws.WriteMessage(websocket.TextMessage, ackBytes); err != nil {
 		logger.FormatLog(r.Context(), "error", fmt.Sprintf("[ws] write auth ack failed: %v", err))
-		ws.Close()
+		wsConn.Close("auth ack failed")
 		return
 	}
 
@@ -210,88 +212,97 @@ func (s *WebsocketServer) handleNewConnectioon(w http.ResponseWriter, r *http.Re
 	go s.writePump(wsConn)
 }
 
-// func (s *WebsocketServer) readPump(wc *wsConnection) {
-// 	defer wc.Close("read pump exit")
-// 	ws := wc.ws
-// 	ws.SetReadLimit(16 * 1024)
-// 	_ = ws.SetReadDeadline(time.Now().Add(pongWait))
-// 	ws.SetPongHandler(func(string) error {
-// 		_ = ws.SetReadDeadline(time.Now().Add(pongWait))
-// 		return nil
-// 	})
+func (s *WebsocketServer) readPump(wsConn *wsConnection) {
+	defer wsConn.Close("read pump exit")
+	ws := wsConn.ws
+	ws.SetReadLimit(16 * 1024)
+	_ = ws.SetReadDeadline(time.Now().Add(pongwait))
+	// 设置心跳处理器
+	ws.SetPongHandler(func(string) error {
+		_ = ws.SetReadDeadline(time.Now().Add(pongwait))
+		return nil
+	})
 
-// 	for {
-// 		select {
-// 		case <-wc.closeChan:
-// 			return
-// 		default:
-// 		}
+	for {
+		select {
+		case <-wsConn.closeChan:
+			// 连接被关闭
+			return
+		default:
+		}
 
-// 		_, msg, err := ws.ReadMessage()
-// 		if err != nil {
-// 			if !websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-// 				logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] read error: %v", wc.connID, err))
-// 			}
-// 			return
-// 		}
+		// 读取消息
+		_, msg, err := ws.ReadMessage()
+		if err != nil {
+			if !websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				// 非正常错误，记录日志
+				logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] read error: %v", wsConn.connID, err))
+			}
+			// 遇到错误，退出主循环关闭连接
+			return
+		}
 
-// 		// 解析消息并路由到相应的处理器
-// 		var envelope Envelope
-// 		if err := json.Unmarshal(msg, &envelope); err != nil {
-// 			logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] unmarshal message error: %v", wc.connID, err))
-// 			continue
-// 		}
+		// 解析消息并路由到相应的处理器
+		var envelope Envelope
+		if err := json.Unmarshal(msg, &envelope); err != nil {
+			logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] unmarshal message error: %v", wsConn.connID, err))
+			continue
+		}
 
-// 		// 特殊处理 ping 消息
-// 		if envelope.Type == "ping" {
-// 			_ = wc.Send([]byte(`{"type":"pong"}`))
-// 			continue
-// 		}
+		// 特殊处理 ping 消息
+		if envelope.Type == "ping" {
+			_ = wsConn.Send([]byte(`{"type":"pong"}`))
+			continue
+		}
 
-// 		// 查找并执行对应的消息处理器
-// 		if handler, exists := s.handlers[envelope.Type]; exists {
-// 			ctx := context.WithValue(context.Background(), "conn", wc)
-// 			if err := handler.HandleMessage(ctx, wc, &envelope); err != nil {
-// 				logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] handle message error: %v", wc.connID, err))
-// 			}
-// 		} else {
-// 			// 未知消息类型，可以选择忽略或记录日志
-// 			logger.FormatLog(context.Background(), "warn", fmt.Sprintf("[conn %s] unknown message type: %s", wc.connID, envelope.Type))
-// 		}
-// 	}
-// }
+		// 查找并执行对应的消息处理器
+		if handler, exists := s.handlers[envelope.Type]; exists {
+			ctx := context.WithValue(context.Background(), "conn", wsConn)
+			if err := handler.HandleMessage(ctx, wsConn, &envelope); err != nil {
+				logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] handle message error: %v", wsConn.connID, err))
+			}
+		} else {
+			// 未知消息类型，可以选择忽略或记录日志
+			logger.FormatLog(context.Background(), "warn", fmt.Sprintf("[conn %s] unknown message type: %s", wsConn.connID, envelope.Type))
+		}
+	}
+}
 
-// func (s *WebsocketServer) writePump(wc *wsConnection) {
-// 	ticker := time.NewTicker(pingPeriod)
-// 	defer func() {
-// 		ticker.Stop()
-// 		wc.Close("write pump exit")
-// 	}()
+func (s *WebsocketServer) writePump(wsConn *wsConnection) {
+	// 创建一个定时器，定时发送ping消息
+	ticker := time.NewTicker(pingPeriod)
+	defer func() {
+		ticker.Stop()
+		wsConn.Close("write pump exit")
+	}()
 
-// 	ws := wc.ws
-// 	for {
-// 		select {
-// 		case <-wc.closeChan:
-// 			return
-// 		case msg, ok := <-wc.SendChan:
-// 			if !ok {
-// 				_ = ws.WriteMessage(websocket.CloseMessage, nil)
-// 				return
-// 			}
-// 			_ = ws.SetWriteDeadline(time.Now().Add(5 * time.Second))
-// 			if err := ws.WriteMessage(websocket.TextMessage, msg); err != nil {
-// 				logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] write error: %v", wc.connID, err))
-// 				return
-// 			}
-// 		case <-ticker.C:
-// 			_ = ws.SetWriteDeadline(time.Now().Add(5 * time.Second))
-// 			if err := ws.WriteMessage(websocket.PingMessage, nil); err != nil {
-// 				logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] ping error: %v", wc.connID, err))
-// 				return
-// 			}
-// 		}
-// 	}
-// }
+	ws := wsConn.ws
+	for {
+		select {
+		case <-wsConn.closeChan:
+			// 关闭连接
+			return
+		case msg, ok := <-wsConn.SendChan:
+			// 发送消息请求
+			if !ok {
+				_ = ws.WriteMessage(websocket.CloseMessage, nil)
+				return
+			}
+			_ = ws.SetWriteDeadline(time.Now().Add(5 * time.Second))
+			if err := ws.WriteMessage(websocket.TextMessage, msg); err != nil {
+				logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] write error: %v", wsConn.connID, err))
+				return
+			}
+		case <-ticker.C:
+			// ping 心跳消息
+			_ = ws.SetWriteDeadline(time.Now().Add(5 * time.Second))
+			if err := ws.WriteMessage(websocket.PingMessage, nil); err != nil {
+				logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] ping error: %v", wsConn.connID, err))
+				return
+			}
+		}
+	}
+}
 
 // 工具函数
 func (s *WebsocketServer) randUUID() string {
