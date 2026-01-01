@@ -26,9 +26,9 @@ func NewAuthClient(baseURL string, httpClient *http.Client) *AuthClient {
 	}
 }
 
-func (c *AuthClient) VerifySession(ctx context.Context, sessionID string) (*common_auth.VerifySessionResponse, error) {
+func (c *AuthClient) VerifySession(ctx context.Context, sessionId string) (*common_auth.VerifySessionResponse, error) {
 	req := &common_auth.VerifySessionRequest{
-		SessionID: sessionID,
+		SessionId: sessionId,
 	}
 
 	jsonData, err := json.Marshal(req)
@@ -90,9 +90,9 @@ func (c *AuthClient) VerifyJWT(ctx context.Context, jwt string) (*common_auth.Ve
 	return &res, nil
 }
 
-func (c *AuthClient) RefreshSession(ctx context.Context, sessionID string) (*common_auth.RefreshSessionResponse, error) {
+func (c *AuthClient) RefreshSession(ctx context.Context, sessionId string) (*common_auth.RefreshSessionResponse, error) {
 	req := &common_auth.RefreshSessionRequest{
-		SessionID: sessionID,
+		SessionId: sessionId,
 	}
 
 	jsonData, err := json.Marshal(req)
@@ -116,6 +116,75 @@ func (c *AuthClient) RefreshSession(ctx context.Context, sessionID string) (*com
 	}
 
 	var res common_auth.RefreshSessionResponse
+	if err := json.Unmarshal(body, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *AuthClient) LoginByEmail(ctx context.Context, email, password, DeviceId string) (*common_auth.LoginByEmailResponse, error) {
+	req := &common_auth.LoginByEmailRequest{
+		Email:    email,
+		Password: password,
+		DeviceId: DeviceId,
+	}
+
+	jsonData, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := c.httpClient.Post(
+		fmt.Sprintf("%s/gate/user-auth/loginByEmail", c.baseURL),
+		"application/json",
+		bytes.NewBuffer(jsonData),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var res common_auth.LoginByEmailResponse
+	if err := json.Unmarshal(body, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *AuthClient) SignUp(ctx context.Context, username, email, password, confirm_password string) (*common_auth.SignUpResponse, error) {
+	req := &common_auth.SignUpRequest{
+		Username:        username,
+		Email:           email,
+		Password:        password,
+		ConfirmPassword: confirm_password,
+	}
+
+	jsonData, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := c.httpClient.Post(
+		fmt.Sprintf("%s/gate/user-auth/signup", c.baseURL),
+		"application/json",
+		bytes.NewBuffer(jsonData),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var res common_auth.SignUpResponse
 	if err := json.Unmarshal(body, &res); err != nil {
 		return nil, err
 	}

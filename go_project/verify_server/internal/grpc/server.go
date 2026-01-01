@@ -50,7 +50,7 @@ func (s *GRPCServer) Start() error {
 	pb.RegisterAuthServer(s.server, authService)
 
 	// 在开发环境中启用反射服务，以便使用 gRPC 客户端工具进行调试
-	if s.config.Env != "production" {
+	if s.config.ProjectConfig.Env != "production" {
 		reflection.Register(s.server)
 		logger.FormatLog(context.Background(), "info", "gRPC reflection service enabled in non-production environment")
 	}

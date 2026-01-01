@@ -2,7 +2,7 @@ package auth_user
 
 import "context"
 
-func (g *GRPCAuthService) ValidateTokenOrSession(ctx context.Context, token, sessionID, deviceID string) (*AuthResult, error) {
+func (g *GRPCAuthService) ValidateTokenOrSession(ctx context.Context, token, sessionId, deviceId string) (*AuthResult, error) {
 	var result *AuthResult
 
 	if token != "" {
@@ -15,14 +15,14 @@ func (g *GRPCAuthService) ValidateTokenOrSession(ctx context.Context, token, ses
 		}
 
 		result = &AuthResult{
-			UserID:   verifyJWTResponse.UserId,
-			DeviceID: verifyJWTResponse.DeviceId,
+			UserId:   verifyJWTResponse.UserId,
+			DeviceId: verifyJWTResponse.DeviceId,
 			Valid:    verifyJWTResponse.Valid,
 			Error:    verifyJWTResponse.Error,
 		}
-	} else if sessionID != "" {
+	} else if sessionId != "" {
 		// validate session
-		verifySessionResponse, err := g.authService.VerifySession(ctx, sessionID)
+		verifySessionResponse, err := g.authService.VerifySession(ctx, sessionId)
 		if err != nil {
 			return &AuthResult{
 				Valid: false,
@@ -31,8 +31,8 @@ func (g *GRPCAuthService) ValidateTokenOrSession(ctx context.Context, token, ses
 		}
 
 		result = &AuthResult{
-			UserID:   verifySessionResponse.UserId,
-			DeviceID: deviceID,
+			UserId:   verifySessionResponse.UserId,
+			DeviceId: deviceId,
 			Valid:    verifySessionResponse.Valid,
 			Error:    verifySessionResponse.Error,
 		}
@@ -46,8 +46,8 @@ func (g *GRPCAuthService) ValidateTokenOrSession(ctx context.Context, token, ses
 	return result, nil
 }
 
-func (g *GRPCAuthService) RefreshSession(ctx context.Context, sessionID string) (*AuthResult, error) {
-	refreshSessionResponse, err := g.authService.RefreshSession(ctx, sessionID)
+func (g *GRPCAuthService) RefreshSession(ctx context.Context, sessionId string) (*AuthResult, error) {
+	refreshSessionResponse, err := g.authService.RefreshSession(ctx, sessionId)
 	if err != nil {
 		return &AuthResult{
 			Valid: false,
@@ -58,5 +58,20 @@ func (g *GRPCAuthService) RefreshSession(ctx context.Context, sessionID string) 
 	return &AuthResult{
 		Valid: refreshSessionResponse.Success,
 		Error: refreshSessionResponse.Error,
+	}, nil
+}
+
+func (g *GRPCAuthService) SignUp(ctx context.Context, username, email, password, confirmPassword string) (*AuthResult, error) {
+	signUpResponse, err := g.authService.SignUp(ctx, username, email, password, confirmPassword)
+	if err != nil {
+		return &AuthResult{
+			Valid: false,
+			Error: "grpc sign up error",
+		}, err
+	}
+
+	return &AuthResult{
+		Valid: signUpResponse.Success,
+		Error: signUpResponse.Error,
 	}, nil
 }

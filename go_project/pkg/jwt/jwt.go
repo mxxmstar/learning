@@ -16,8 +16,8 @@ type JWTConfig struct {
 }
 
 type CustomClaims struct {
-	UserID   uint64 `json:"user_id"`
-	DeviceID string `json:"device_id,omitempty"`
+	UserId   uint64 `json:"user_id"`
+	DeviceId string `json:"device_id,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -35,18 +35,18 @@ func NewJWT(secretKey []byte, issuer string, expire int) *JWT {
 	}
 }
 
-func (j *JWT) GenerateToken(userID uint64, deviceID string) (string, error) {
-	if userID == 0 {
+func (j *JWT) GenerateToken(userId uint64, deviceId string) (string, error) {
+	if userId == 0 {
 		return "", errors.New("user id is null")
 	}
 
 	claims := CustomClaims{
-		UserID:   userID,
-		DeviceID: deviceID,
+		UserId:   userId,
+		DeviceId: deviceId,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    j.config.Issuer,
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(j.config.Expire) * time.Second)),
-			Subject:   strconv.FormatUint(userID, 10),
+			Subject:   strconv.FormatUint(userId, 10),
 		},
 	}
 

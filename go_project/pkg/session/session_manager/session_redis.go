@@ -33,9 +33,9 @@ func NewRedisSessionManager(redisClient *redis.RedisClient, prefix string, defau
 }
 
 // GetSession 从redis中获取会话
-func (m *RedisSessionManager) GetSession(sessionID string) (*session.BaseSession, error) {
+func (m *RedisSessionManager) GetSession(sessionId string) (*session.BaseSession, error) {
 	ctx := context.Background()
-	key := m.prefix + sessionID
+	key := m.prefix + sessionId
 
 	sessionStr, err := m.redisClient.Get(ctx, key)
 	if err != nil {
@@ -59,13 +59,13 @@ func (m *RedisSessionManager) GetSession(sessionID string) (*session.BaseSession
 		return nil, ErrSessionExpired
 	}
 
-	logger.LogAuth(ctx, "redis", true, "get session: "+sessionID)
+	logger.LogAuth(ctx, "redis", true, "get session: "+sessionId)
 	return &session, nil
 }
 
 func (m *RedisSessionManager) AddSession(session *session.BaseSession) error {
 	ctx := context.Background()
-	key := m.prefix + string(session.ID)
+	key := m.prefix + string(session.Id)
 
 	sessionStr, err := json.Marshal(session)
 	if err != nil {
@@ -76,18 +76,18 @@ func (m *RedisSessionManager) AddSession(session *session.BaseSession) error {
 	return m.redisClient.Set(ctx, key, string(sessionStr), m.defaultTTL)
 }
 
-func (m *RedisSessionManager) RemoveSession(sessionID string) error {
+func (m *RedisSessionManager) RemoveSession(sessionId string) error {
 	ctx := context.Background()
-	key := m.prefix + sessionID
+	key := m.prefix + sessionId
 
 	// 删除redis中的会话
 	return m.redisClient.Del(ctx, key)
 }
 
 // ExtendExpiration 延长会话的过期时间
-func (m *RedisSessionManager) ExtendExpiration(sessionID string, ttl time.Duration) error {
+func (m *RedisSessionManager) ExtendExpiration(sessionId string, ttl time.Duration) error {
 	ctx := context.Background()
-	key := m.prefix + sessionID
+	key := m.prefix + sessionId
 
 	// 延长redis中的会话的过期时间
 	return m.redisClient.Expire(ctx, key, ttl)

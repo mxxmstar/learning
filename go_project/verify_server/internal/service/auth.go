@@ -84,13 +84,13 @@ func (s *AuthService) LoginByEmail(ctx context.Context, email, password string, 
 
 	// 创建session
 	// TODO: 权限待完善
-	deviceID := ""
+	deviceId := ""
 	if loginCtx != nil {
-		deviceID = loginCtx.DeviceId
+		deviceId = loginCtx.DeviceId
 	}
 	loginSession, err := token_session.NewLoginTokenSession(
 		user.Id,
-		deviceID,   // 设备ID
+		deviceId,   // 设备Id
 		[]string{}, // 权限列表
 		SessionTTL,
 	)
@@ -119,14 +119,14 @@ func (s *AuthService) LoginByEmail(ctx context.Context, email, password string, 
 
 // GenerateJWT 生成JWT令牌
 func (s *AuthService) GenerateJWT(user *domain.User, loginCtx *domain.LoginContext) (string, error) {
-	userID := user.Id
-	deviceID := ""
+	userId := user.Id
+	deviceId := ""
 	if loginCtx != nil {
-		deviceID = loginCtx.DeviceId
+		deviceId = loginCtx.DeviceId
 	}
 
 	// 生成JWT token
-	token, err := s.jwtManager.GenerateToken(userID, deviceID)
+	token, err := s.jwtManager.GenerateToken(userId, deviceId)
 	if err != nil {
 		return "", err
 	}
@@ -134,8 +134,8 @@ func (s *AuthService) GenerateJWT(user *domain.User, loginCtx *domain.LoginConte
 }
 
 // GetSessionUser 从session中获取用户信息
-func (s *AuthService) GetSessionUser(ctx context.Context, sessionID string) (*domain.User, error) {
-	key := "session:" + sessionID
+func (s *AuthService) GetSessionUser(ctx context.Context, sessionId string) (*domain.User, error) {
+	key := "session:" + sessionId
 	userStr, err := s.redisClient.Get(ctx, key)
 	if err != nil {
 		return nil, err
@@ -151,14 +151,14 @@ func (s *AuthService) GetSessionUser(ctx context.Context, sessionID string) (*do
 }
 
 // Logout 用户登出，清除session
-func (s *AuthService) Logout(ctx context.Context, sessionID string) error {
-	key := "session:" + sessionID
+func (s *AuthService) Logout(ctx context.Context, sessionId string) error {
+	key := "session:" + sessionId
 	return s.redisClient.Del(ctx, key)
 }
 
 // RefreshSession 刷新session的过期时间
-func (s *AuthService) RefreshSession(ctx context.Context, sessionID string) error {
-	key := "session:" + sessionID
+func (s *AuthService) RefreshSession(ctx context.Context, sessionId string) error {
+	key := "session:" + sessionId
 	return s.redisClient.Expire(ctx, key, SessionTTL)
 }
 

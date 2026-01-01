@@ -2,7 +2,7 @@ package auth_user
 
 import "context"
 
-func (h *HTTPAuthService) ValidateTokenOrSession(ctx context.Context, token, sessionID, deviceID string) (*AuthResult, error) {
+func (h *HTTPAuthService) ValidateTokenOrSession(ctx context.Context, token, sessionId, deviceId string) (*AuthResult, error) {
 	var result *AuthResult
 
 	if token != "" {
@@ -15,14 +15,14 @@ func (h *HTTPAuthService) ValidateTokenOrSession(ctx context.Context, token, ses
 		}
 
 		result = &AuthResult{
-			UserID:   verifyJWTResponse.UserId,
-			DeviceID: verifyJWTResponse.DeviceId,
+			UserId:   verifyJWTResponse.UserId,
+			DeviceId: verifyJWTResponse.DeviceId,
 			Valid:    verifyJWTResponse.Valid,
 			Error:    verifyJWTResponse.Error,
 		}
-	} else if sessionID != "" {
+	} else if sessionId != "" {
 		// validate session
-		verifySessionResponse, err := h.authService.VerifySession(ctx, sessionID)
+		verifySessionResponse, err := h.authService.VerifySession(ctx, sessionId)
 		if err != nil {
 			return &AuthResult{
 				Valid: false,
@@ -31,8 +31,8 @@ func (h *HTTPAuthService) ValidateTokenOrSession(ctx context.Context, token, ses
 		}
 
 		result = &AuthResult{
-			UserID:   verifySessionResponse.UserId,
-			DeviceID: deviceID,
+			UserId:   verifySessionResponse.UserId,
+			DeviceId: deviceId,
 			Valid:    verifySessionResponse.Valid,
 			Error:    verifySessionResponse.Error,
 		}
@@ -46,8 +46,8 @@ func (h *HTTPAuthService) ValidateTokenOrSession(ctx context.Context, token, ses
 	return result, nil
 }
 
-func (h *HTTPAuthService) RefreshSession(ctx context.Context, sessionID string) (*AuthResult, error) {
-	refreshSessionResponse, err := h.authService.RefreshSession(ctx, sessionID)
+func (h *HTTPAuthService) RefreshSession(ctx context.Context, sessionId string) (*AuthResult, error) {
+	refreshSessionResponse, err := h.authService.RefreshSession(ctx, sessionId)
 	if err != nil {
 		return &AuthResult{
 			Valid: false,

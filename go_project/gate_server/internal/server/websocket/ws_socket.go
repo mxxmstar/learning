@@ -25,16 +25,16 @@ type MessageHandler interface {
 type Envelope struct {
 	Type      string                 `json:"type"`
 	Token     string                 `json:"token,omitempty"`
-	SessionID string                 `json:"session_id,omitempty"`
-	DeviceID  string                 `json:"device_id,omitempty"`
+	SessionId string                 `json:"session_id,omitempty"`
+	DeviceId  string                 `json:"device_id,omitempty"`
 	Body      map[string]interface{} `json:"body,omitempty"` // 消息体 方便扩展
 }
 
 // wsConnection 实现 conn.Connection 接口
 type wsConnection struct {
-	connID    string
-	userID    uint64
-	deviceID  string
+	connId    string
+	userId    uint64
+	deviceId  string
 	ws        *websocket.Conn
 	SendChan  chan []byte            // 发送消息的 channel
 	closed    atomic.Bool            // 是否关闭
@@ -42,11 +42,11 @@ type wsConnection struct {
 	mgr       conn.ConnectionManager // 连接管理器
 }
 
-func (c *wsConnection) ID() string {
-	return c.connID
+func (c *wsConnection) Id() string {
+	return c.connId
 }
-func (c *wsConnection) UserID() uint64 {
-	return c.userID
+func (c *wsConnection) UserId() uint64 {
+	return c.userId
 }
 func (c *wsConnection) Send(msg []byte) error {
 	if c.closed.Load() {
@@ -69,8 +69,8 @@ func (c *wsConnection) Close(reason string) error {
 	}
 	close(c.closeChan)
 	logger.FormatLog(context.Background(), "info", "wsConnection Close",
-		zap.String("connID", c.ID()),
-		zap.Uint64("userID", c.UserID()),
+		zap.String("connId", c.Id()),
+		zap.Uint64("userId", c.UserId()),
 		zap.String("reason", reason))
 
 	// 发送控制帧关闭连接
@@ -94,10 +94,10 @@ const (
 )
 
 // NotifyOldFunc 通知旧连接关闭
-type NotifyOldFunc func(ctx context.Context, oldConnID string)
+type NotifyOldFunc func(ctx context.Context, oldConnId string)
 
 type WebsocketServer struct {
-	gateID    string
+	gateId    string
 	mgr       conn.ConnectionManager
 	auth      auth_user.AuthService     // 验证服务
 	handlers  map[string]MessageHandler // 消息处理器映射
@@ -107,14 +107,14 @@ type WebsocketServer struct {
 }
 
 func NewWebsocketServer(
-	gateID string,
+	gateId string,
 	mgr conn.ConnectionManager,
 	auth auth_user.AuthService,
 	store interface{},
 	notifyOld NotifyOldFunc,
 ) *WebsocketServer {
 	s := &WebsocketServer{
-		gateID:    gateID,
+		gateId:    gateId,
 		mgr:       mgr,
 		auth:      auth,
 		handlers:  make(map[string]MessageHandler),
@@ -163,7 +163,7 @@ func (s *WebsocketServer) handleNewConnectioon(w http.ResponseWriter, r *http.Re
 
 	// 执行认证
 	ctx, cancel := context.WithTimeout(r.Context(), authTimeout)
-	authResult, err := s.auth.ValidateTokenOrSession(ctx, envelope.Token, envelope.SessionID, envelope.DeviceID)
+	authResult, err := s.auth.ValidateTokenOrSession(ctx, envelope.Token, envelope.SessionId, envelope.DeviceId)
 	cancel()
 	if err != nil || !authResult.Valid {
 		logger.FormatLog(r.Context(), "error", fmt.Sprintf("[ws] auth failed: %v, error: %s", err, authResult.Error))
@@ -172,12 +172,12 @@ func (s *WebsocketServer) handleNewConnectioon(w http.ResponseWriter, r *http.Re
 	}
 
 	// 创建连接对象并注册
-	// connID := logger.NewTraceID()
-	connID := fmt.Sprintf("%s#%s", s.gateID, s.randUUID())
+	// connId := logger.NewTraceId()
+	connId := fmt.Sprintf("%s#%s", s.gateId, s.randUUID())
 	wsConn := &wsConnection{
-		connID:    connID,
-		userID:    authResult.UserID,
-		deviceID:  authResult.DeviceID,
+		connId:    connId,
+		userId:    authResult.UserId,
+		deviceId:  authResult.DeviceId,
 		ws:        ws,
 		SendChan:  make(chan []byte, 256),
 		closeChan: make(chan struct{}),
@@ -193,11 +193,11 @@ func (s *WebsocketServer) handleNewConnectioon(w http.ResponseWriter, r *http.Re
 	// 发送认证成功响应 TODO
 	ack := map[string]interface{}{
 		"type":        "auth_ack",
-		"conn_id":     connID,
+		"conn_id":     connId,
 		"session_ttl": sessionTTl,
 		"server_time": time.Now().Unix(),
 		// "body": map[string]interface{}{
-		// 	"conn_id": connID,
+		// 	"conn_id": connId,
 		// },
 	}
 	ackBytes, _ := json.Marshal(ack)
@@ -236,7 +236,7 @@ func (s *WebsocketServer) readPump(wsConn *wsConnection) {
 		if err != nil {
 			if !websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				// 非正常错误，记录日志
-				logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] read error: %v", wsConn.connID, err))
+				logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] read error: %v", wsConn.connId, err))
 			}
 			// 遇到错误，退出主循环关闭连接
 			return
@@ -245,7 +245,7 @@ func (s *WebsocketServer) readPump(wsConn *wsConnection) {
 		// 解析消息并路由到相应的处理器
 		var envelope Envelope
 		if err := json.Unmarshal(msg, &envelope); err != nil {
-			logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] unmarshal message error: %v", wsConn.connID, err))
+			logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] unmarshal message error: %v", wsConn.connId, err))
 			continue
 		}
 
@@ -259,11 +259,11 @@ func (s *WebsocketServer) readPump(wsConn *wsConnection) {
 		if handler, exists := s.handlers[envelope.Type]; exists {
 			ctx := context.WithValue(context.Background(), "conn", wsConn)
 			if err := handler.HandleMessage(ctx, wsConn, &envelope); err != nil {
-				logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] handle message error: %v", wsConn.connID, err))
+				logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] handle message error: %v", wsConn.connId, err))
 			}
 		} else {
 			// 未知消息类型，可以选择忽略或记录日志
-			logger.FormatLog(context.Background(), "warn", fmt.Sprintf("[conn %s] unknown message type: %s", wsConn.connID, envelope.Type))
+			logger.FormatLog(context.Background(), "warn", fmt.Sprintf("[conn %s] unknown message type: %s", wsConn.connId, envelope.Type))
 		}
 	}
 }
@@ -290,14 +290,14 @@ func (s *WebsocketServer) writePump(wsConn *wsConnection) {
 			}
 			_ = ws.SetWriteDeadline(time.Now().Add(5 * time.Second))
 			if err := ws.WriteMessage(websocket.TextMessage, msg); err != nil {
-				logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] write error: %v", wsConn.connID, err))
+				logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] write error: %v", wsConn.connId, err))
 				return
 			}
 		case <-ticker.C:
 			// ping 心跳消息
 			_ = ws.SetWriteDeadline(time.Now().Add(5 * time.Second))
 			if err := ws.WriteMessage(websocket.PingMessage, nil); err != nil {
-				logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] ping error: %v", wsConn.connID, err))
+				logger.FormatLog(context.Background(), "error", fmt.Sprintf("[conn %s] ping error: %v", wsConn.connId, err))
 				return
 			}
 		}

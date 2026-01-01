@@ -58,8 +58,8 @@ func (s *AuthService) VerifyJWT(ctx context.Context, req *pb.VerifyJWTRequest) (
 
 	return &pb.VerifyJWTResponse{
 		Valid:    true,
-		UserId:   claims.UserID,
-		DeviceId: claims.DeviceID,
+		UserId:   claims.UserId,
+		DeviceId: claims.DeviceId,
 		Error:    "",
 	}, nil
 }
@@ -85,7 +85,7 @@ func (s *AuthService) LoginByEmail(ctx context.Context, req *pb.LoginByEmailRequ
 		// todo: 其他登录上下文信息
 	}
 
-	sessionID, err := s.authService.LoginByEmail(ctx, req.GetEmail(), req.GetPassword(), loginCtx)
+	sessionId, err := s.authService.LoginByEmail(ctx, req.GetEmail(), req.GetPassword(), loginCtx)
 	if err != nil {
 		return &pb.LoginByEmailResponse{
 			SessionId: "",
@@ -96,13 +96,13 @@ func (s *AuthService) LoginByEmail(ctx context.Context, req *pb.LoginByEmailRequ
 	}
 
 	// 获取用户信息
-	user, err := s.authService.GetSessionUser(ctx, sessionID)
+	user, err := s.authService.GetSessionUser(ctx, sessionId)
 	if err != nil {
 		return &pb.LoginByEmailResponse{
 			SessionId: "",
 			JwtToken:  "",
 			UserId:    0,
-			Error:     "Failed to get user information by session ID: " + err.Error(),
+			Error:     "Failed to get user information by session Id: " + err.Error(),
 		}, nil
 	}
 
@@ -118,7 +118,7 @@ func (s *AuthService) LoginByEmail(ctx context.Context, req *pb.LoginByEmailRequ
 	}
 
 	return &pb.LoginByEmailResponse{
-		SessionId: sessionID,
+		SessionId: sessionId,
 		JwtToken:  jwtToken,
 		UserId:    user.Id,
 		Error:     "",

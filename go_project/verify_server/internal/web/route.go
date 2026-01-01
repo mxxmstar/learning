@@ -42,8 +42,9 @@ func RegisterUserRoutes(server *gin.Engine, cfg *verify_config.Config) {
 	// 注册用户处理器
 	userHandler := handler.NewUserHandler(userService)
 
+	log.Printf("============%s", cfg.ProjectConfig.Env)
 	// 注册用户注册相关路由
-	if cfg.Env == "test" {
+	if cfg.ProjectConfig.Env == "test" {
 		authGroup := server.Group("/user-auth")
 		{
 			authGroup.POST("/signup", authHandler.SignupHandler)
@@ -61,7 +62,7 @@ func RegisterUserRoutes(server *gin.Engine, cfg *verify_config.Config) {
 	}
 
 	// 注册用户相关路由
-	if cfg.Env == "test" {
+	if cfg.ProjectConfig.Env == "test" {
 		userGroup := server.Group("/user")
 		{
 			userGroup.GET("/profile", userHandler.ProfileHandler)

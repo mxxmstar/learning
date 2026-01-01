@@ -48,29 +48,29 @@ func TestInitLogger(t *testing.T) {
 	logger.Info("测试日志")
 }
 
-func TestNewTraceID(t *testing.T) {
-	// 测试 NewTraceID 函数
-	traceID1 := NewTraceID()
-	assert.NotEmpty(t, traceID1, "生成的 traceID 为空")
-	traceID2 := NewTraceID()
-	assert.NotEmpty(t, traceID2, "生成的 traceID 为空")
-	assert.NotEqual(t, traceID1, traceID2, "生成的 traceID 重复")
+func TestNewTraceId(t *testing.T) {
+	// 测试 NewTraceId 函数
+	traceId1 := NewTraceId()
+	assert.NotEmpty(t, traceId1, "生成的 traceId 为空")
+	traceId2 := NewTraceId()
+	assert.NotEmpty(t, traceId2, "生成的 traceId 为空")
+	assert.NotEqual(t, traceId1, traceId2, "生成的 traceId 重复")
 }
 
-func TestWithTraceID(t *testing.T) {
+func TestWithTraceId(t *testing.T) {
 	// 创建基础上下文
 	ctx := context.Background()
-	// 添加 traceID 到上下文 ctx 中
-	ctxWithTraceID := WithTraceID(ctx)
-	// 验证 traceID 已添加到上下文
-	traceID := GetTraceID(ctxWithTraceID)
+	// 添加 traceId 到上下文 ctx 中
+	ctxWithTraceId := WithTraceId(ctx)
+	// 验证 traceId 已添加到上下文
+	traceId := GetTraceId(ctxWithTraceId)
 
-	assert.NotEqual(t, "unknown", traceID, "traceID 为 unknown")
+	assert.NotEqual(t, "unknown", traceId, "traceId 为 unknown")
 
-	// 测试没有 TraceID 的情况
-	ctxWithoutTraceID := context.Background()
-	traceID = GetTraceID(ctxWithoutTraceID)
-	assert.Equal(t, "unknown", traceID, "traceID 不为 unknown")
+	// 测试没有 TraceId 的情况
+	ctxWithoutTraceId := context.Background()
+	traceId = GetTraceId(ctxWithoutTraceId)
+	assert.Equal(t, "unknown", traceId, "traceId 不为 unknown")
 }
 
 func TestFormatLog(t *testing.T) {
@@ -78,11 +78,11 @@ func TestFormatLog(t *testing.T) {
 	cleanup, observedLogs := setupTestLogger(t)
 	defer cleanup() // 测试结束后清理日志器
 
-	// 创建带 TraceID 的上下文
-	ctxWithTraceID := WithTraceID(context.Background())
+	// 创建带 TraceId 的上下文
+	ctxWithTraceId := WithTraceId(context.Background())
 
 	// 测试 FormatLog 函数
-	FormatLog(ctxWithTraceID, "info", "测试日志", zap.String("key", "value"))
+	FormatLog(ctxWithTraceId, "info", "测试日志", zap.String("key", "value"))
 
 	// {"level":"INFO","ts":"2025-09-25T14:30:00.123+08:00","caller":"logger_test.go:80",
 	// "msg":"测试日志","trace_id":"a1b2c3d4e5f6g7h8","context":"[Conn:conn123][Trace:a1b2c3d4e5f6g7h8]",
@@ -96,7 +96,7 @@ func TestFormatLog(t *testing.T) {
 	// 验证日志字段
 	log := logs[0]
 	assert.Equal(t, "value", log.ContextMap()["key"], "key 字段错误")
-	assert.NotEmpty(t, log.ContextMap()["traceID"], "traceID 字段为空")
+	assert.NotEmpty(t, log.ContextMap()["traceId"], "traceId 字段为空")
 }
 
 func TestLogAuth(t *testing.T) {
@@ -104,11 +104,11 @@ func TestLogAuth(t *testing.T) {
 	cleanup, observedLogs := setupTestLogger(t)
 	defer cleanup() // 测试结束后清理日志器
 
-	// 创建带 TraceID 的上下文
-	ctxWithTraceID := WithTraceID(context.Background())
+	// 创建带 TraceId 的上下文
+	ctxWithTraceId := WithTraceId(context.Background())
 
 	// 测试 LogAuth 函数
-	LogAuth(ctxWithTraceID, "login", true, "用户登录成功")
+	LogAuth(ctxWithTraceId, "login", true, "用户登录成功")
 
 	// 验证日志输出
 	logs := observedLogs.FilterMessage("auth").All()
@@ -122,7 +122,7 @@ func TestLogAuth(t *testing.T) {
 			assert.Equal(t, "login", log.ContextMap()["action"], "action 字段错误")
 			assert.Equal(t, true, log.ContextMap()["success"], "success 字段错误")
 			assert.Equal(t, "用户登录成功", log.ContextMap()["msg"], "消息内容错误")
-			assert.NotEmpty(t, log.ContextMap()["traceID"], "traceID 字段为空")
+			assert.NotEmpty(t, log.ContextMap()["traceId"], "traceId 字段为空")
 			break
 		}
 	}
@@ -134,12 +134,12 @@ func TestLogRouter(t *testing.T) {
 	cleanup, observedLogs := setupTestLogger(t)
 	defer cleanup() // 测试结束后清理日志器
 
-	// 创建带 TraceID 的上下文
-	ctxWithTraceID := WithTraceID(context.Background())
+	// 创建带 TraceId 的上下文
+	ctxWithTraceId := WithTraceId(context.Background())
 
 	// 测试 LogRouter 函数
 	duration := 100 * time.Millisecond
-	LogRouter(ctxWithTraceID, "/api/v1/hello", duration)
+	LogRouter(ctxWithTraceId, "/api/v1/hello", duration)
 
 	// 验证日志输出
 	logs := observedLogs.FilterMessage("router").All()
@@ -149,5 +149,5 @@ func TestLogRouter(t *testing.T) {
 	log := logs[0]
 	assert.Equal(t, "/api/v1/hello", log.ContextMap()["route"], "route 字段错误")
 	assert.Equal(t, duration, log.ContextMap()["duration"], "duration 字段错误")
-	assert.NotEmpty(t, log.ContextMap()["traceID"], "traceID 字段为空")
+	assert.NotEmpty(t, log.ContextMap()["traceId"], "traceId 字段为空")
 }

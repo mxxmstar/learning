@@ -8,10 +8,10 @@ import (
 	"time"
 )
 
-type traceIDKey struct{} // 定义上下文中的key类型，避免冲突
+type traceIdKey struct{} // 定义上下文中的key类型，避免冲突
 
-// 生成唯一的trace ID
-func NewTraceID() string {
+// 生成唯一的trace Id
+func NewTraceId() string {
 	// 8字节随机数据 → 16个十六进制字符
 	b := make([]byte, 8) // 8字节 = 64位随机数
 	_, err := rand.Read(b)
@@ -23,14 +23,14 @@ func NewTraceID() string {
 	return hex.EncodeToString(b) // 严格16字符
 }
 
-func GetTraceID(ctx context.Context) string {
-	if traceID, ok := ctx.Value(traceIDKey{}).(string); ok {
-		return traceID
+func GetTraceId(ctx context.Context) string {
+	if traceId, ok := ctx.Value(traceIdKey{}).(string); ok {
+		return traceId
 	}
 	return "unknown"
 }
 
-func WithTraceID(ctx context.Context) context.Context {
-	traceID := NewTraceID()
-	return context.WithValue(ctx, traceIDKey{}, traceID)
+func WithTraceId(ctx context.Context) context.Context {
+	traceId := NewTraceId()
+	return context.WithValue(ctx, traceIdKey{}, traceId)
 }

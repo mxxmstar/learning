@@ -9,14 +9,14 @@ import (
 
 // 验证服务接口
 type AuthService interface {
-	ValidateTokenOrSession(ctx context.Context, token, sessionID, deviceID string) (*AuthResult, error)
-	RefreshSession(ctx context.Context, sessionID string) (*AuthResult, error)
+	ValidateTokenOrSession(ctx context.Context, token, sessionId, deviceId string) (*AuthResult, error)
+	RefreshSession(ctx context.Context, sessionId string) (*AuthResult, error)
 }
 
 // AuthResult 认证结果
 type AuthResult struct {
-	UserID   uint64
-	DeviceID string
+	UserId   uint64
+	DeviceId string
 	Valid    bool
 	Error    string
 }
@@ -25,8 +25,16 @@ type GRPCAuthService struct {
 	authService *grpc_auth_client.AuthClient
 }
 
+func (g *GRPCAuthService) AuthService() *grpc_auth_client.AuthClient {
+	return g.authService
+}
+
 type HTTPAuthService struct {
 	authService *http_auth_client.AuthClient
+}
+
+func (h *HTTPAuthService) AuthService() *http_auth_client.AuthClient {
+	return h.authService
 }
 
 func NewGRPCAuthService(authService *grpc_auth_client.AuthClient) *GRPCAuthService {

@@ -18,49 +18,49 @@ func NewManager() ConnectionManager {
 }
 
 func (m *manager) Register(conn Connection) error {
-	connID := conn.ID()
-	userID := conn.UserID()
+	connId := conn.Id()
+	userId := conn.UserId()
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	m.conns[connID] = conn
-	if _, exists := m.userConns[userID]; !exists {
-		m.userConns[userID] = make(map[string]Connection)
+	m.conns[connId] = conn
+	if _, exists := m.userConns[userId]; !exists {
+		m.userConns[userId] = make(map[string]Connection)
 	}
-	m.userConns[userID][connID] = conn
+	m.userConns[userId][connId] = conn
 
 	return nil
 }
 
 func (m *manager) UnRegister(conn Connection) error {
-	connID := conn.ID()
-	userID := conn.UserID()
+	connId := conn.Id()
+	userId := conn.UserId()
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	_, ok := m.conns[connID]
+	_, ok := m.conns[connId]
 	if !ok {
 		return ErrConnectionNotFound
 	}
 
-	delete(m.conns, connID)
-	if userMap, exists := m.userConns[userID]; exists {
-		delete(userMap, connID)
+	delete(m.conns, connId)
+	if userMap, exists := m.userConns[userId]; exists {
+		delete(userMap, connId)
 		if len(userMap) == 0 {
-			delete(m.userConns, userID)
+			delete(m.userConns, userId)
 		}
 	}
 
 	return nil
 }
 
-func (m *manager) GetConnection(connID string) (Connection, error) {
+func (m *manager) GetConnection(connId string) (Connection, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	conn, ok := m.conns[connID]
+	conn, ok := m.conns[connId]
 	if !ok {
 		return nil, ErrConnectionNotFound
 	}
@@ -68,12 +68,12 @@ func (m *manager) GetConnection(connID string) (Connection, error) {
 	return conn, nil
 }
 
-func (m *manager) GetConnectionsByUserID(userID uint64) []Connection {
+func (m *manager) GetConnectionsByUserId(userId uint64) []Connection {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
 	var conns []Connection
-	for _, conn := range m.userConns[userID] {
+	for _, conn := range m.userConns[userId] {
 		conns = append(conns, conn)
 	}
 

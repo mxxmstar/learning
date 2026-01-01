@@ -18,6 +18,11 @@ type VerifyServerConfig struct {
 	VerifyGRPCServerConfig VerifyGRPCServerConfig `mapstructure:"verify_server"`
 }
 
+type GateGRPCServerConfig struct {
+	Host string `mapstructure:"host"`
+	Port int    `mapstructure:"port"`
+}
+
 type GateServerConfig struct {
 	Name string `mapstructure:"name"`
 	Host string `mapstructure:"host"`

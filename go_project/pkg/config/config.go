@@ -3,9 +3,10 @@ package config
 import "time"
 
 // 服务器配置结构
-type ServerConfig struct {
-	Name string `mapstructure:"name"`
-	Env  string `mapstructure:"env"`
+type ProjectConfig struct {
+	Name    string `mapstructure:"name"`
+	Env     string `mapstructure:"env"`
+	Version string `mapstructure:"version"`
 }
 
 // 数据库实例配置结构
@@ -88,7 +89,7 @@ type RedisConfig struct {
 // 主配置结构
 type Config struct {
 	// 环境变量
-	Env string `mapstructure:"ENV"`
+	ProjectConfig ProjectConfig `mapstructure:"PROJECT"`
 
 	Database     DatabaseConfig     `mapstructure:"DATABASE"`
 	Redis        RedisConfig        `mapstructure:"REDIS"`

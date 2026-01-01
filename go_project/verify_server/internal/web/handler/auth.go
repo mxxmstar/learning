@@ -26,7 +26,7 @@ func NewAuthHandler(authService *service.AuthService, userService *service.UserS
 	return &AuthHandler{
 		authService: authService,
 		userService: userService,
-		emailExp:    regexp.MustCompile(`^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$`, regexp.None),
+		emailExp:    regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, regexp.None),
 		passwordExp: regexp.MustCompile(`^[a-zA-Z0-9_-]{6,20}$`, regexp.None),
 	}
 }
@@ -47,6 +47,7 @@ func (h *AuthHandler) SignupHandler(ctx *gin.Context) {
 		return
 	}
 
+	log.Printf("req: %v", req)
 	ok, err := h.emailExp.MatchString(req.Email)
 	if err != nil {
 		ctx.JSON(http.StatusOK, response.ErrorResponse("system error", nil))
@@ -120,7 +121,7 @@ func (h *AuthHandler) LoginHandler(ctx *gin.Context) {
 	}
 
 	// 传统 session 登录方式
-	sessionID, err := h.authService.LoginByEmail(ctx, req.Email, req.Password, loginCtx)
+	sessionId, err := h.authService.LoginByEmail(ctx, req.Email, req.Password, loginCtx)
 	if err != nil {
 		ctx.JSON(http.StatusOK, response.ErrorResponse("invalid username or password", nil))
 		return
@@ -140,7 +141,7 @@ func (h *AuthHandler) LoginHandler(ctx *gin.Context) {
 	}
 
 	responseData := map[string]interface{}{
-		"sessionId": sessionID,
+		"sessionId": sessionId,
 		"jwtToken":  jwtToken,
 		"userId":    user.Id,
 	}
@@ -166,7 +167,7 @@ func (h *AuthHandler) VerifySessionHandler(ctx *gin.Context) {
 	}
 
 	// 从 Redis 中获取用户信息
-	user, err := h.authService.GetSessionUser(ctx, req.SessionID)
+	user, err := h.authService.GetSessionUser(ctx, req.SessionId)
 	if err != nil {
 		ctx.JSON(http.StatusOK, common_auth.VerifySessionResponse{
 			Valid: false,
@@ -203,8 +204,8 @@ func (h *AuthHandler) VerifyJWTHandler(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, common_auth.VerifyJWTResponse{
 		Valid:    true,
-		UserId:   claims.UserID,
-		DeviceId: claims.DeviceID,
+		UserId:   claims.UserId,
+		DeviceId: claims.DeviceId,
 	})
 }
 
@@ -220,7 +221,7 @@ func (h *AuthHandler) RefreshSessionHandler(ctx *gin.Context) {
 	}
 
 	// 刷新 session
-	err := h.authService.RefreshSession(ctx, req.SessionID)
+	err := h.authService.RefreshSession(ctx, req.SessionId)
 	if err != nil {
 		ctx.JSON(http.StatusOK, common_auth.RefreshSessionResponse{
 			Success: false,

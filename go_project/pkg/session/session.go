@@ -19,11 +19,11 @@ const (
 
 var ErrJWTManagerNotSet = errors.New("jwt manager not set")
 
-// SessionID 会话ID,唯一标识符
-type SessionID string
+// SessionId 会话Id,唯一标识符
+type SessionId string
 
 type BaseSession struct {
-	ID        SessionID
+	Id        SessionId
 	Type      SessionType
 	CreatedAt time.Time
 	ExpiredAt time.Time
@@ -31,10 +31,10 @@ type BaseSession struct {
 	mutex     sync.RWMutex
 }
 
-func NewBaseSession(id SessionID, sessionType SessionType, ttl time.Duration) *BaseSession {
+func NewBaseSession(id SessionId, sessionType SessionType, ttl time.Duration) *BaseSession {
 	now := time.Now()
 	return &BaseSession{
-		ID:        id,
+		Id:        id,
 		Type:      sessionType,
 		CreatedAt: now,
 		ExpiredAt: now.Add(ttl),
@@ -117,9 +117,9 @@ func (s *BaseSession) ExtendExpiration(ttl time.Duration) {
 // }
 
 // type Session struct {
-// 	ConnID            string
-// 	UserID            string
-// 	DeviceID          string
+// 	ConnId            string
+// 	UserId            string
+// 	DeviceId          string
 // 	Conn              Connection
 // 	SendChan          chan []byte
 // 	LastHeartbeatTime int64
@@ -127,9 +127,9 @@ func (s *BaseSession) ExtendExpiration(ttl time.Duration) {
 // 	State             atomic.Uint32
 // }
 
-// func NewSession(connID string, conn Connection, ip string) *Session {
+// func NewSession(connId string, conn Connection, ip string) *Session {
 // 	return &Session{
-// 		ConnID:            connID,
+// 		ConnId:            connId,
 // 		Conn:              conn,
 // 		SendChan:          make(chan []byte, 1024),
 // 		LastHeartbeatTime: time.Now().Unix(),
@@ -138,10 +138,10 @@ func (s *BaseSession) ExtendExpiration(ttl time.Duration) {
 // 	}
 // }
 
-// // 通过认证后设置用户ID和设备ID
-// func (s *Session) SetUserIDAndDeviceID(userID, deviceID string) {
-// 	s.UserID = userID
-// 	s.DeviceID = deviceID
+// // 通过认证后设置用户Id和设备Id
+// func (s *Session) SetUserIdAndDeviceId(userId, deviceId string) {
+// 	s.UserId = userId
+// 	s.DeviceId = deviceId
 // 	s.State.Store(StateAuthenticated)
 // }
 

@@ -31,11 +31,11 @@ func InitLogger() {
 }
 
 func FormatLog(ctx context.Context, level string, msg string, fields ...zap.Field) {
-	// 获取 traceID
-	traceID := GetTraceID(ctx)
+	// 获取 traceId
+	traceId := GetTraceId(ctx)
 
-	// 添加 traceID 到日志字段
-	fields = append(fields, zap.String("traceID", traceID))
+	// 添加 traceId 到日志字段
+	fields = append(fields, zap.String("traceId", traceId))
 
 	// 获取日志上下文信息
 	logContext := FormatLogContext(ctx)

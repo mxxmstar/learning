@@ -28,7 +28,7 @@ func (dao *UserDAO) SetErrorConverter(converter database.DBErrorConverter) {
 }
 
 type User struct {
-	// 用户唯一主键ID 自动递增
+	// 用户唯一主键Id 自动递增
 	Id uint64 `gorm:"primaryKey;autoIncrement"`
 	// 用户名 64字节 唯一索引 不能为空
 	Username string `gorm:"size:64;uniqueIndex;not null"`

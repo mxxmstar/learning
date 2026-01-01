@@ -1,13 +1,14 @@
-server:
+project:
   name: "learn_mx"
   env: "test"
+  version: "1.0.0"
 database:
   # 统一数据库类型：mysql | postgres
   type: "mysql"
 
   # 认证库 所有服务共享
   auth_db:
-    dsn: "root:root@tcp(127.0.0.1:3308)/auth_db?charset=utf8mb4&parseTime=True&loc=Local"
+    dsn: "root:root@tcp(localhost:3308)/auth_db?charset=utf8mb4&parseTime=True&loc=Local"
     charset: "utf8mb4"
     conn_timeout: "5s"
     read_timeout: "3s"
@@ -18,32 +19,32 @@ database:
       conn_max_lifetime: "300s"
       conn_max_idle_time: "120s"
 
-  # 聊天库（ChatServer）
-  chat_db:
-    dsn: "user:password@tcp(127.0.0.1:3307)/chat_db?charset=utf8mb4&parseTime=True&loc=Local"
-    pool:
-      max_open_conns: 50
-      max_idle_conns: 10
-      conn_max_lifetime: "300s"
-      conn_max_idle_time: "120s"
+  # # 聊天库（ChatServer）
+  # chat_db:
+  #   dsn: "user:password@tcp(127.0.0.1:3307)/chat_db?charset=utf8mb4&parseTime=True&loc=Local"
+  #   pool:
+  #     max_open_conns: 50
+  #     max_idle_conns: 10
+  #     conn_max_lifetime: "300s"
+  #     conn_max_idle_time: "120s"
 
-  # 文件服务库（FileServer）
-  file_db:
-    dsn: "user:password@tcp(127.0.0.1:3307)/file_db?charset=utf8mb4&parseTime=True&loc=Local"
-    pool:
-      max_open_conns: 50
-      max_idle_conns: 10
-      conn_max_lifetime: "300s"
-      conn_max_idle_time: "120s"
+  # # 文件服务库（FileServer）
+  # file_db:
+  #   dsn: "user:password@tcp(127.0.0.1:3307)/file_db?charset=utf8mb4&parseTime=True&loc=Local"
+  #   pool:
+  #     max_open_conns: 50
+  #     max_idle_conns: 10
+  #     conn_max_lifetime: "300s"
+  #     conn_max_idle_time: "120s"
 
-  # 视频/RTC库（VideoServer + RTCServer）
-  video_db:
-    dsn: "user:password@tcp(127.0.0.1:3307)/video_db?charset=utf8mb4&parseTime=True&loc=Local"
-    pool:
-      max_open_conns: 50
-      max_idle_conns: 10
-      conn_max_lifetime: "300s"
-      conn_max_idle_time: "120s"
+  # # 视频/RTC库（VideoServer + RTCServer）
+  # video_db:
+  #   dsn: "user:password@tcp(127.0.0.1:3307)/video_db?charset=utf8mb4&parseTime=True&loc=Local"
+  #   pool:
+  #     max_open_conns: 50
+  #     max_idle_conns: 10
+  #     conn_max_lifetime: "300s"
+  #     conn_max_idle_time: "120s"
 
   # PostgreSQL（切换时只需调整 type 和这里的 dsn）
   # auth_db:

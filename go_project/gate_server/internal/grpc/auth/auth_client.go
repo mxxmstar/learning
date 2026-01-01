@@ -40,9 +40,9 @@ func NewAuthClient(config *gate_config.Config) (*AuthClient, error) {
 }
 
 // 验证 session
-func (c *AuthClient) VerifySession(ctx context.Context, sessionID string) (*pb.VerifySessionResponse, error) {
+func (c *AuthClient) VerifySession(ctx context.Context, sessionId string) (*pb.VerifySessionResponse, error) {
 	req := &pb.VerifySessionRequest{
-		SessionId: sessionID,
+		SessionId: sessionId,
 	}
 	return c.client.VerifySession(ctx, req)
 }
@@ -56,19 +56,19 @@ func (c *AuthClient) VerifyJWT(ctx context.Context, jwt string) (*pb.VerifyJWTRe
 }
 
 // 刷新 session
-func (c *AuthClient) RefreshSession(ctx context.Context, sessionID string) (*pb.RefreshSessionResponse, error) {
+func (c *AuthClient) RefreshSession(ctx context.Context, sessionId string) (*pb.RefreshSessionResponse, error) {
 	req := &pb.RefreshSessionRequest{
-		SessionId: sessionID,
+		SessionId: sessionId,
 	}
 	return c.client.RefreshSession(ctx, req)
 }
 
 // 通过邮箱登录
-func (c *AuthClient) LoginByEmail(ctx context.Context, email, password, DeviceID string) (*pb.LoginByEmailResponse, error) {
+func (c *AuthClient) LoginByEmail(ctx context.Context, email, password, DeviceId string) (*pb.LoginByEmailResponse, error) {
 	req := &pb.LoginByEmailRequest{
 		Email:    email,
 		Password: password,
-		DeviceId: DeviceID,
+		DeviceId: DeviceId,
 	}
 	return c.client.LoginByEmail(ctx, req)
 }

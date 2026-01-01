@@ -8,8 +8,8 @@ import (
 
 // ConnectionContext 用于存储连接相关的信息
 type ConnectionContext struct {
-	ConnID    string
-	TraceID   string // 链路追踪ID 16字符
+	ConnId    string
+	TraceId   string // 链路追踪Id 16字符
 	StartTime time.Time
 }
 
@@ -24,10 +24,10 @@ func GetConnectionContext(ctx context.Context) *ConnectionContext {
 }
 
 // 将 ConnectionContext 存储到上下文 context 中
-func WithConnectionContext(ctx context.Context, connID string) context.Context {
+func WithConnectionContext(ctx context.Context, connId string) context.Context {
 	connCtx := &ConnectionContext{
-		ConnID:    connID,
-		TraceID:   NewTraceID(),
+		ConnId:    connId,
+		TraceId:   NewTraceId(),
 		StartTime: time.Now(),
 	}
 	return context.WithValue(ctx, ConnectionContextKey{}, connCtx)
@@ -39,5 +39,5 @@ func FormatLogContext(ctx context.Context) string {
 	if connCtx == nil {
 		return ""
 	}
-	return fmt.Sprintf("[conn:%s][traceID:%s]", connCtx.ConnID, connCtx.TraceID)
+	return fmt.Sprintf("[conn:%s][traceId:%s]", connCtx.ConnId, connCtx.TraceId)
 }
