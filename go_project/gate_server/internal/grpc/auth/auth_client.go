@@ -19,6 +19,7 @@ type AuthClient struct {
 
 func NewAuthClient(config *gate_config.Config) (*AuthClient, error) {
 	// 连接到 verify_server 的 gRPC 服务
+	// TODO: 获取 verify_server 的 gRPC 服务地址 ，查询自己维护的表 ，查询 status_server
 	dsn := fmt.Sprintf("%s:%d", config.VerifyServer.VerifyGRPCServerConfig.Host, config.VerifyServer.VerifyGRPCServerConfig.Port)
 	conn, err := grpc.NewClient(
 		dsn,

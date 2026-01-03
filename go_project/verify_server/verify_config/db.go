@@ -23,8 +23,6 @@ func InitDB(cfg *Config) (database.DBInterface, error) {
 		return nil, fmt.Errorf("unsupported db type: %s", dbType)
 	}
 
-	println("InitDB")
-
 	g, err := gorm.Open(dialector, &gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to open db: %w", err)

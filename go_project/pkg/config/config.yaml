@@ -2,6 +2,82 @@ project:
   name: "learn_mx"
   env: "test"
   version: "1.0.0"
+
+server:
+  gate_servers:
+    - name: "gate_server_1"
+      grpc_config:
+        host: "localhost"
+        port: 50050
+      http_config:
+        host: "localhost"
+        port: 8080
+      service_config:
+        cluster_id: "cluster_1"
+        region: "cn"
+        zone: "guangzhou"
+        weight: 1
+        status: "online"
+        service_prefix: "gate"
+        load_balance:
+          method: "round_robin"
+          health_check: true
+          health_check_path: "/health"
+          health_check_interval: 30
+          health_check_port: 8080
+        log_config:
+          level: "debug"
+          format: "json"
+          output: "both"
+          file_config:
+            file_name: "gate_server_1.log"
+            file_path: "./logs/"
+            max_size: 100
+            max_backups: 3
+            max_age: 30
+            compress: true
+  verify_servers:
+    - name: "verify_server_1"
+      grpc_config:
+        host: "localhost"
+        port: 50060
+      http_config:
+        host: "localhost"
+        port: 8090
+      service_config:
+        cluster_id: "cluster_1"
+        region: "cn"
+        zone: "guangzhou"
+        weight: 1
+        status: "online"
+        service_prefix: "verify"
+        load_balance:
+          method: "round_robin"
+          health_check: true
+          health_check_path: "/health"
+          health_check_interval: 30
+          health_check_port: 8090
+        log_config:
+          level: "debug"
+          format: "json"
+          output: "both"
+          file_config:
+            file_name: "verify_server_1.log"
+            file_path: "./logs/"
+            max_size: 100
+            max_backups: 3
+            max_age: 30
+            compress: true
+  # chat_servers:
+
+  global_config:
+    env: "test"
+    default_log_level: "debug"
+
+  
+
+
+
 database:
   # 统一数据库类型：mysql | postgres
   type: "mysql"
@@ -60,12 +136,43 @@ database:
   # 是否自动迁移（gorm）
   auto_migrate: true
 
-redis1:
+redis:
+  mode: "standalone"
+  standalone:
+    addr: "localhost:6379"
+    password: ""
+    db: 0
+    dial_timeout: "5s"
+  usage:
+    session:
+      addr: "localhost:6379"
+      password: ""
+      db: 1
+      dial_timeout: "5s"
+    cache:
+      addr: "localhost:6379"
+      password: ""
+      db: 2
+      dial_timeout: "5s"
+  pool:
+    pool_size: 10
+    min_idle_conns: 5
+    max_retries: 3
 
-  host: "localhost"
 
-verify_server:
-  name: verify_server
-  host: "localhost"
-  port: 8080
-  log_level: "debug"
+message_queue:
+ type: "redis"
+ redis:
+   addr: "localhost:6379"
+   password: ""
+   db: 3
+   dial_timeout: "5s"
+ kafka:
+   brokers:
+    - "localhost:9092"
+   username: ""
+   password: ""
+
+
+
+
