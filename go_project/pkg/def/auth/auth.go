@@ -1,4 +1,4 @@
-package common_auth
+package auth_def
 
 type VerifySessionRequest struct {
 	SessionId string `json:"sessionId"`

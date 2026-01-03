@@ -6,7 +6,7 @@ import (
 
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-gonic/gin"
-	common_auth "github.com/mxxmstar/learning/pkg/common/auth"
+	auth_def "github.com/mxxmstar/learning/pkg/def/auth"
 	"github.com/mxxmstar/learning/pkg/logger"
 	"github.com/mxxmstar/learning/verify_server/internal/domain"
 	"github.com/mxxmstar/learning/verify_server/internal/service"
@@ -157,9 +157,9 @@ func (h *AuthHandler) OAuthHandler(ctx *gin.Context) {
 
 // 验证 session
 func (h *AuthHandler) VerifySessionHandler(ctx *gin.Context) {
-	var req common_auth.VerifySessionRequest
+	var req auth_def.VerifySessionRequest
 	if err := ctx.Bind(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, common_auth.VerifySessionResponse{
+		ctx.JSON(http.StatusBadRequest, auth_def.VerifySessionResponse{
 			Valid: false,
 			Error: "invalid request",
 		})
@@ -169,23 +169,23 @@ func (h *AuthHandler) VerifySessionHandler(ctx *gin.Context) {
 	// 从 Redis 中获取用户信息
 	user, err := h.authService.GetSessionUser(ctx, req.SessionId)
 	if err != nil {
-		ctx.JSON(http.StatusOK, common_auth.VerifySessionResponse{
+		ctx.JSON(http.StatusOK, auth_def.VerifySessionResponse{
 			Valid: false,
 			Error: "invalid or expired session",
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, common_auth.VerifySessionResponse{
+	ctx.JSON(http.StatusOK, auth_def.VerifySessionResponse{
 		Valid:  true,
 		UserId: user.Id,
 	})
 }
 
 func (h *AuthHandler) VerifyJWTHandler(ctx *gin.Context) {
-	var req common_auth.VerifyJWTRequest
+	var req auth_def.VerifyJWTRequest
 	if err := ctx.Bind(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, common_auth.VerifyJWTResponse{
+		ctx.JSON(http.StatusBadRequest, auth_def.VerifyJWTResponse{
 			Valid: false,
 			Error: "invalid request",
 		})
@@ -195,14 +195,14 @@ func (h *AuthHandler) VerifyJWTHandler(ctx *gin.Context) {
 	// 验证 JWT 令牌
 	claims, err := h.authService.ValidateAndParseJWT(req.JWTToken)
 	if err != nil {
-		ctx.JSON(http.StatusOK, common_auth.VerifyJWTResponse{
+		ctx.JSON(http.StatusOK, auth_def.VerifyJWTResponse{
 			Valid: false,
 			Error: "invalid or expired jwt token",
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, common_auth.VerifyJWTResponse{
+	ctx.JSON(http.StatusOK, auth_def.VerifyJWTResponse{
 		Valid:    true,
 		UserId:   claims.UserId,
 		DeviceId: claims.DeviceId,
@@ -211,9 +211,9 @@ func (h *AuthHandler) VerifyJWTHandler(ctx *gin.Context) {
 
 func (h *AuthHandler) RefreshSessionHandler(ctx *gin.Context) {
 
-	var req common_auth.RefreshSessionRequest
+	var req auth_def.RefreshSessionRequest
 	if err := ctx.Bind(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, common_auth.RefreshSessionResponse{
+		ctx.JSON(http.StatusBadRequest, auth_def.RefreshSessionResponse{
 			Success: false,
 			Error:   "invalid request",
 		})
@@ -223,14 +223,14 @@ func (h *AuthHandler) RefreshSessionHandler(ctx *gin.Context) {
 	// 刷新 session
 	err := h.authService.RefreshSession(ctx, req.SessionId)
 	if err != nil {
-		ctx.JSON(http.StatusOK, common_auth.RefreshSessionResponse{
+		ctx.JSON(http.StatusOK, auth_def.RefreshSessionResponse{
 			Success: false,
 			Error:   "failed to refresh session",
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, common_auth.RefreshSessionResponse{
+	ctx.JSON(http.StatusOK, auth_def.RefreshSessionResponse{
 		Success: true,
 	})
 }

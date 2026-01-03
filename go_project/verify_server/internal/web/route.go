@@ -4,6 +4,8 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mxxmstar/learning/pkg/database"
+	"github.com/mxxmstar/learning/pkg/store/redis"
 	"github.com/mxxmstar/learning/verify_server/internal/repository"
 	"github.com/mxxmstar/learning/verify_server/internal/repository/dao"
 	"github.com/mxxmstar/learning/verify_server/internal/service"
@@ -11,23 +13,7 @@ import (
 	"github.com/mxxmstar/learning/verify_server/verify_config"
 )
 
-func RegisterUserRoutes(server *gin.Engine, cfg *verify_config.Config) {
-	// 初始化数据库
-	db, err := verify_config.InitDB(cfg)
-	if err != nil {
-		panic(err)
-	}
-	err = dao.InitTables(db, cfg)
-	if err != nil {
-		panic(err)
-	}
-	log.Println("Database tables initialized successfully.")
-
-	// 初始化Redis客户端
-	redisClient, err := verify_config.InitRedis(cfg)
-	if err != nil {
-		panic(err)
-	}
+func RegisterUserRoutes(server *gin.Engine, cfg *verify_config.Config, db database.DBInterface, redisClient *redis.RedisClient) {
 
 	// 初始化仓库
 	userDAO := dao.NewUserDAO(db)
@@ -42,9 +28,9 @@ func RegisterUserRoutes(server *gin.Engine, cfg *verify_config.Config) {
 	// 注册用户处理器
 	userHandler := handler.NewUserHandler(userService)
 
-	log.Printf("============%s", cfg.ProjectConfig.Env)
-	// 注册用户注册相关路由
-	if cfg.ProjectConfig.Env == "test" {
+	log.Printf("============%s", cfg.ServerConfig.GlobalConfig.Env)
+	// 注册用户注册相关路由（测试用）
+	if cfg.ServerConfig.GlobalConfig.Env == "test" {
 		authGroup := server.Group("/user-auth")
 		{
 			authGroup.POST("/signup", authHandler.SignupHandler)
@@ -61,8 +47,8 @@ func RegisterUserRoutes(server *gin.Engine, cfg *verify_config.Config) {
 		gateAuthGroup.POST("/refresh-session", authHandler.RefreshSessionHandler)
 	}
 
-	// 注册用户相关路由
-	if cfg.ProjectConfig.Env == "test" {
+	// 注册用户相关路由（测试用）
+	if cfg.ServerConfig.GlobalConfig.Env == "test" {
 		userGroup := server.Group("/user")
 		{
 			userGroup.GET("/profile", userHandler.ProfileHandler)

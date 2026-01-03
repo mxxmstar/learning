@@ -1,19 +1,36 @@
 package web
 
 import (
+	"log"
 	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/mxxmstar/learning/verify_server/internal/repository/dao"
 	"github.com/mxxmstar/learning/verify_server/verify_config"
 )
 
 func RegisterRoutes(server *gin.Engine, cfg *verify_config.Config) {
-	// 初始化服务
+	// 初始化数据库
+	db, err := verify_config.InitDB(cfg)
+	if err != nil {
+		panic(err)
+	}
+	err = dao.InitTables(db, cfg)
+	if err != nil {
+		panic(err)
+	}
+	log.Println("Database tables initialized successfully.")
+
+	// 初始化Redis客户端
+	redisClient, err := verify_config.InitRedis(cfg)
+	if err != nil {
+		panic(err)
+	}
 	// 初始化处理器
 	// 注册中间件
-	RegisterUserRoutes(server, cfg)
+	RegisterUserRoutes(server, cfg, db, redisClient)
 
 }
 

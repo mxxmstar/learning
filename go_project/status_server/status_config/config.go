@@ -1,6 +1,7 @@
 package status_config
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/mxxmstar/learning/pkg/config"
@@ -47,7 +48,13 @@ func Init() (*Config, error) {
 	return cfg, nil
 }
 
-// GetStatusServer 获取status server自己的配置信息
-func (c *Config) GetStatusServer() *config.StatusServerConfig {
-	return &c.ServerConfig.StatusServer
+// GetStatusServer 获取status server自己的地址信息
+func (c *Config) GetStatusServerHttpAddr() string {
+	addr := fmt.Sprintf("%s:%d", c.ServerConfig.StatusServer.HttpConfig.Host, c.ServerConfig.StatusServer.HttpConfig.Port)
+	return addr
+}
+
+func (c *Config) GetStatusServerGRPCAddr() string {
+	addr := fmt.Sprintf("%s:%d", c.ServerConfig.StatusServer.GRPCConfig.Host, c.ServerConfig.StatusServer.GRPCConfig.Port)
+	return addr
 }

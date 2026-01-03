@@ -4,6 +4,25 @@ project:
   version: "1.0.0"
 
 server:
+  status_server:
+    name: "status_server"
+    grpc_config:
+      host: "localhost"
+      port: 50040
+    http_config:
+      host: "localhost"
+      port: 8000
+    log_config:
+          level: "debug"
+          format: "json"
+          output: "both"
+          file_config:
+            file_name: "status_server.log"
+            file_path: "./logs/"
+            max_size: 100
+            max_backups: 3
+            max_age: 30
+            compress: true
   gate_servers:
     - name: "gate_server_1"
       grpc_config:

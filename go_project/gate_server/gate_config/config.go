@@ -87,3 +87,7 @@ func (c *Config) GetActiveVerifyServers() []config.VerifyServerConfig {
 	}
 	return activeVerifyServers
 }
+
+func (c *Config) GetStatusServerAddress() string {
+	return fmt.Sprintf("%s:%d", c.ServerConfig.StatusServer.HttpConfig.Host, c.ServerConfig.StatusServer.HttpConfig.Port)
+}

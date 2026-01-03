@@ -257,6 +257,29 @@ func TestInit(t *testing.T) {
 			t.Errorf("Expected project version '1.0.0', got '%s'", cfg.Project.Version)
 		}
 
+		// 状态服务器配置
+		if cfg.Server.StatusServer.Name != "status_server" {
+			t.Errorf("Expected status server name 'status_server', got '%s'", cfg.Server.StatusServer.Name)
+		}
+
+		if cfg.Server.StatusServer.GRPCConfig.Host != "localhost" {
+			t.Errorf("Expected status server GRPC host 'localhost', got '%s'", cfg.Server.StatusServer.GRPCConfig.Host)
+		}
+		if cfg.Server.StatusServer.GRPCConfig.Port != 50040 {
+			t.Errorf("Expected status server GRPC port 50040, got %d", cfg.Server.StatusServer.GRPCConfig.Port)
+		}
+
+		if cfg.Server.StatusServer.HttpConfig.Host != "localhost" {
+			t.Errorf("Expected status server HTTP host 'localhost', got '%s'", cfg.Server.StatusServer.HttpConfig.Host)
+		}
+		if cfg.Server.StatusServer.HttpConfig.Port != 8000 {
+			t.Errorf("Expected status server HTTP port 8000, got %d", cfg.Server.StatusServer.HttpConfig.Port)
+		}
+
+		if cfg.Server.StatusServer.LogConfig.FileConfig.FileName != "status_server.log" {
+			t.Errorf("Expected status server log file name 'status_server.log', got '%s'", cfg.Server.StatusServer.LogConfig.FileConfig.FileName)
+		}
+
 		// 验证服务器配置
 		if len(cfg.Server.GateServers) != 1 {
 			t.Errorf("Expected 1 gate servers, got %d", len(cfg.Server.GateServers))

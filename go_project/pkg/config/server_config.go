@@ -2,9 +2,9 @@ package config
 
 // 服务器总配置
 type ServerConfig struct {
+	StatusServer  StatusServerConfig   `mapstructure:"status_server"`  // 状态服务配置(单例)
 	GateServers   []GateServerConfig   `mapstructure:"gate_servers"`   // 网关服务配置(集群)
 	VerifyServers []VerifyServerConfig `mapstructure:"verify_servers"` // 验证服务配置(集群)
-	StatusServer  StatusServerConfig   `mapstructure:"status_server"`  // 状态服务配置(单例)
 	GlobalConfig  GlobalConfig         `mapstructure:"global_config"`  // 全局配置
 }
 
@@ -45,10 +45,10 @@ type VerifyHttpServerConfig struct {
 }
 
 type StatusServerConfig struct {
-	Name          string                 `mapstructure:"name"`
-	GRPCConfig    StatusGRPCServerConfig `mapstructure:"grpc_config"`
-	HttpConfig    StatusHttpServerConfig `mapstructure:"http_config"`
-	ServiceConfig ServiceConfig          `mapstructure:"service_config"`
+	Name       string                 `mapstructure:"name"`
+	GRPCConfig StatusGRPCServerConfig `mapstructure:"grpc_config"`
+	HttpConfig StatusHttpServerConfig `mapstructure:"http_config"`
+	LogConfig  LogConfig              `mapstructure:"log_config"` // 日志配置
 }
 
 type StatusGRPCServerConfig struct {

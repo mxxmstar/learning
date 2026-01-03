@@ -7,9 +7,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
-	common_auth "github.com/mxxmstar/learning/pkg/common/auth"
+	"github.com/mxxmstar/learning/gate_server/gate_config"
+	http_status_client "github.com/mxxmstar/learning/gate_server/internal/http/status"
+	auth_def "github.com/mxxmstar/learning/pkg/def/auth"
 )
 
 type AuthClient struct {
@@ -17,17 +18,20 @@ type AuthClient struct {
 	httpClient *http.Client
 }
 
-func NewAuthClient(baseURL string, httpClient *http.Client) *AuthClient {
-	return &AuthClient{
-		baseURL: baseURL,
-		httpClient: &http.Client{
-			Timeout: 10 * time.Second,
-		},
+func NewAuthClient(c gate_config.Config, httpClient *http.Client) (*AuthClient, error) {
+	sc := http_status_client.NewStatusClient(c, httpClient)
+	verifyServer, err := http_status_client.GetVerifyServer(sc)
+	if err != nil {
+		return nil, err
 	}
+	return &AuthClient{
+		baseURL:    verifyServer.HTTPAddress.Host + ":" + fmt.Sprint(verifyServer.HTTPAddress.Port),
+		httpClient: httpClient,
+	}, nil
 }
 
-func (c *AuthClient) VerifySession(ctx context.Context, sessionId string) (*common_auth.VerifySessionResponse, error) {
-	req := &common_auth.VerifySessionRequest{
+func (c *AuthClient) VerifySession(ctx context.Context, sessionId string) (*auth_def.VerifySessionResponse, error) {
+	req := &auth_def.VerifySessionRequest{
 		SessionId: sessionId,
 	}
 
@@ -51,15 +55,15 @@ func (c *AuthClient) VerifySession(ctx context.Context, sessionId string) (*comm
 		return nil, err
 	}
 
-	var res common_auth.VerifySessionResponse
+	var res auth_def.VerifySessionResponse
 	if err := json.Unmarshal(body, &res); err != nil {
 		return nil, err
 	}
 	return &res, nil
 }
 
-func (c *AuthClient) VerifyJWT(ctx context.Context, jwt string) (*common_auth.VerifyJWTResponse, error) {
-	req := &common_auth.VerifyJWTRequest{
+func (c *AuthClient) VerifyJWT(ctx context.Context, jwt string) (*auth_def.VerifyJWTResponse, error) {
+	req := &auth_def.VerifyJWTRequest{
 		JWTToken: jwt,
 	}
 
@@ -83,15 +87,15 @@ func (c *AuthClient) VerifyJWT(ctx context.Context, jwt string) (*common_auth.Ve
 		return nil, err
 	}
 
-	var res common_auth.VerifyJWTResponse
+	var res auth_def.VerifyJWTResponse
 	if err := json.Unmarshal(body, &res); err != nil {
 		return nil, err
 	}
 	return &res, nil
 }
 
-func (c *AuthClient) RefreshSession(ctx context.Context, sessionId string) (*common_auth.RefreshSessionResponse, error) {
-	req := &common_auth.RefreshSessionRequest{
+func (c *AuthClient) RefreshSession(ctx context.Context, sessionId string) (*auth_def.RefreshSessionResponse, error) {
+	req := &auth_def.RefreshSessionRequest{
 		SessionId: sessionId,
 	}
 
@@ -115,15 +119,15 @@ func (c *AuthClient) RefreshSession(ctx context.Context, sessionId string) (*com
 		return nil, err
 	}
 
-	var res common_auth.RefreshSessionResponse
+	var res auth_def.RefreshSessionResponse
 	if err := json.Unmarshal(body, &res); err != nil {
 		return nil, err
 	}
 	return &res, nil
 }
 
-func (c *AuthClient) LoginByEmail(ctx context.Context, email, password, DeviceId string) (*common_auth.LoginByEmailResponse, error) {
-	req := &common_auth.LoginByEmailRequest{
+func (c *AuthClient) LoginByEmail(ctx context.Context, email, password, DeviceId string) (*auth_def.LoginByEmailResponse, error) {
+	req := &auth_def.LoginByEmailRequest{
 		Email:    email,
 		Password: password,
 		DeviceId: DeviceId,
@@ -149,15 +153,15 @@ func (c *AuthClient) LoginByEmail(ctx context.Context, email, password, DeviceId
 		return nil, err
 	}
 
-	var res common_auth.LoginByEmailResponse
+	var res auth_def.LoginByEmailResponse
 	if err := json.Unmarshal(body, &res); err != nil {
 		return nil, err
 	}
 	return &res, nil
 }
 
-func (c *AuthClient) SignUp(ctx context.Context, username, email, password, confirm_password string) (*common_auth.SignUpResponse, error) {
-	req := &common_auth.SignUpRequest{
+func (c *AuthClient) SignUp(ctx context.Context, username, email, password, confirm_password string) (*auth_def.SignUpResponse, error) {
+	req := &auth_def.SignUpRequest{
 		Username:        username,
 		Email:           email,
 		Password:        password,
@@ -184,7 +188,7 @@ func (c *AuthClient) SignUp(ctx context.Context, username, email, password, conf
 		return nil, err
 	}
 
-	var res common_auth.SignUpResponse
+	var res auth_def.SignUpResponse
 	if err := json.Unmarshal(body, &res); err != nil {
 		return nil, err
 	}
