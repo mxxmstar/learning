@@ -1,0 +1,2 @@
+[20260111]
+    1. 修改verify_server的工程结构，将原来作为web后端的结构修改为微服务架构. eg: web->http [not done]

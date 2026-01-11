@@ -7,17 +7,18 @@ package status_def
 
 // ServiceRegisterRequest 服务注册请求
 type ServiceRegisterRequest struct {
-	ServiceName    string            `json:"service_name"`       // 服务名称，如 gate_server_1
-	ServiceId      string            `json:"service_id"`         // 服务Id
-	Protocol       []string          `json:"protocol"`           // 服务协议，如：["grpc", "http"]
-	GRPCAddress    *GRPCAddress      `json:"grpc_address"`       // grpc服务地址
-	HTTPAddress    *HTTPAddress      `json:"http_address"`       // http服务地址
-	Env            string            `json:"env"`                // 环境，如：prod, test
-	Tags           []string          `json:"tags,omitempty"`     // 标签，如：["region=cn-hangzhou", "zone=hangzhou-b"]
-	Metadata       map[string]string `json:"metadata,omitempty"` // 元数据，存储详细的服务信息
-	HealthCheckUrl string            `json:"health_check_url"`   // 健康检查地址
-	Weight         int               `json:"weight"`             // 权重
-	Enable         bool              `json:"enable"`             // 是否启用
+	ServiceName    string            `json:"service_name"`         // 服务名称，如 gate_server_1
+	ServiceType    string            `json:"service_type"`         // 服务类型，如：gate, verify
+	ServiceId      string            `json:"service_id,omitempty"` // 服务Id
+	Protocol       []string          `json:"protocol"`             // 服务协议，如：["grpc", "http"]
+	GRPCAddress    *GRPCAddress      `json:"grpc_address"`         // grpc服务地址
+	HTTPAddress    *HTTPAddress      `json:"http_address"`         // http服务地址
+	Env            string            `json:"env"`                  // 环境，如：prod, test
+	Tags           []string          `json:"tags,omitempty"`       // 标签，如：["region=cn-hangzhou", "zone=hangzhou-b"]
+	Metadata       map[string]string `json:"metadata,omitempty"`   // 元数据，存储详细的服务信息
+	HealthCheckUrl string            `json:"health_check_url"`     // 健康检查地址
+	Weight         int               `json:"weight"`               // 权重
+	Enable         bool              `json:"enable"`               // 是否启用
 }
 
 type GRPCAddress struct {
@@ -69,6 +70,7 @@ type ServiceDiscoveryRequest struct {
 // ServiceInfo 服务信息
 type ServiceInfo struct {
 	ServiceName    string            `json:"service_name"`       // 服务名称，如 gate_server_1
+	ServiceType    string            `json:"service_type"`       // 服务类型，如：gate, verify
 	ServiceId      string            `json:"service_id"`         // 服务Id
 	Protocol       []string          `json:"protocol"`           // 服务协议，如：grpc, http
 	GRPCAddress    *GRPCAddress      `json:"grpc_address"`       // grpc服务地址
@@ -117,7 +119,7 @@ type ServiceDiscoveryByTagsRequest struct {
 	ServiceName string            `json:"service_name"`       // 服务名
 	Tags        []string          `json:"tags,omitempty"`     // 标签
 	Metadata    map[string]string `json:"metadata,omitempty"` // 元数据
-	Strategy    string            `json:"strategy"`           // 策略
+	Strategy    string            `json:"strategy"`           // 负载均衡策略
 }
 
 type ServiceDiscoveryByTagsResponse struct {
