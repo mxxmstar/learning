@@ -1,18 +1,18 @@
 package handler
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mxxmstar/learning/status_server/internal/model"
+	status_def "github.com/mxxmstar/learning/pkg/def/status"
 	etcd_registry "github.com/mxxmstar/learning/status_server/internal/registry/etcd_registry"
 	mem_registry "github.com/mxxmstar/learning/status_server/internal/registry/mem_registry"
 )
 
 const (
-	EnableRegistry = "memory"
+	EnableRegistry    = "memory"
+	HeartbeatInterval = 60 // TODO: 在配置中配置
 )
 
 var registryInstance model.Registry
@@ -37,43 +37,17 @@ func InitRegistry(endpoints []string) error {
 
 // ServiceRegisterHandler 服务注册处理器
 func ServiceRegisterHandler(c *gin.Context) {
-	var req status.ServiceRegisterRequest
+	var req status_def.ServiceRegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, status.ServiceRegisterResponse{
+		c.JSON(http.StatusBadRequest, status_def.ServiceRegisterResponse{
 			Code:    400,
 			Message: "Invalid request parameters",
 		})
 		return
 	}
 
-	// 转换为内部 ServiceInfo 结构
-	serviceInfo := &model.ServiceInfo{
-		Id:            req.ServiceID,
-		Type:          req.ServiceName,
-		Host:          req.HTTPAddress.Host,
-		Port:          req.HTTPAddress.Port,
-		TTLSeconds:    60, // 默认 60 秒 TTL
-		LastHeartbeat: model.GetCurrentTimestamp(),
-		IdC:           "default",
-	}
+	serviceInfo := req.ConvertToStatusServiceInfo()
 
-	// 存储元数据
-	metadata, _ := json.Marshal(req.Metadata)
-	serviceInfo.Metadata = string(metadata)
-
-	if err := registryInstance.RegisterService(serviceInfo); err != nil {
-		c.JSON(http.StatusInternalServerError, status.ServiceRegisterResponse{
-			Code:    500,
-			Message: "Internal server error",
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, status.ServiceRegisterResponse{
-		ServiceID: req.ServiceID,
-		Code:      200,
-		Message:   "Service registered successfully",
-	})
 }
 
 // ServiceDiscoveryByTagsHandler 服务发现处理器

@@ -1,6 +1,10 @@
-package model
+package status_model
 
 import "time"
+
+const (
+	HeartbeatInterval = 60 // TODO: 在配置中配置
+)
 
 type ServiceInfo struct {
 	ServiceName    string            `json:"service_name" redis:"service_name"`     // 服务名称，如 gate_server_1
@@ -13,7 +17,7 @@ type ServiceInfo struct {
 	Metadata       map[string]string `json:"metadata,omitempty"`                    // 元数据，存储详细的服务信息
 	HealthCheckUrl string            `json:"health_check_url"`                      // 健康检查地址
 	Weight         int               `json:"weight"`                                // 权重
-	Status         string            `json:"status"`                                // 服务状态
+	Status         string            `json:"status"`                                // 服务状态 "offline" "online" "active" "inactive"
 	TTLSeconds     int64             `json:"ttl_seconds" redis:"ttl_seconds"`       // 心跳超时允许时间
 	LastHeartbeat  int64             `json:"last_heartbeat" redis:"last_heartbeat"` // 最后心跳时间
 	IdC            string            `json:"idc" redis:"idc"`                       // 数据中心Id

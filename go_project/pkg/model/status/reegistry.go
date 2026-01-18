@@ -1,4 +1,4 @@
-package model
+package status_model
 
 type Registry interface {
 	RegisterService(service *ServiceInfo) error

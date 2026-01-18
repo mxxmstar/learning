@@ -1,5 +1,9 @@
 package status_def
 
+import (
+	status_model "github.com/mxxmstar/learning/pkg/model/status"
+)
+
 /**
  * @Description: 定义其他服务向 status_server 发送的请求和响应
  * 	包含：服务注册、服务注销、服务心跳、服务发现、服务状态查询、服务健康检查
@@ -19,6 +23,7 @@ type ServiceRegisterRequest struct {
 	HealthCheckUrl string            `json:"health_check_url"`     // 健康检查地址
 	Weight         int               `json:"weight"`               // 权重
 	Enable         bool              `json:"enable"`               // 是否启用
+	Idc            string            `json:"idc"`                  // 机房
 }
 
 type GRPCAddress struct {
@@ -29,6 +34,45 @@ type GRPCAddress struct {
 type HTTPAddress struct {
 	Host string `json:"host"`
 	Port int    `json:"port"`
+}
+
+func (req *GRPCAddress) ConvertToStatusServiceInfo() *status_model.GRPCAddress {
+	grpc := &status_model.GRPCAddress{
+		Host: req.Host,
+		Port: req.Port,
+	}
+	return grpc
+}
+
+func (req *HTTPAddress) ConvertToStatusServiceInfo() *status_model.HTTPAddress {
+	http := &status_model.HTTPAddress{
+		Host: req.Host,
+		Port: req.Port,
+	}
+	return http
+}
+func (req *ServiceRegisterRequest) ConvertToStatusServiceInfo() *status_model.ServiceInfo {
+	status := "online"
+	if req.Enable {
+		status = "active"
+	}
+	// 转换为内部 ServiceInfo 结构
+	serviceInfo := &status_model.ServiceInfo{
+		ServiceName:    req.ServiceName,
+		ServiceType:    req.ServiceType,
+		ServiceId:      req.ServiceId,
+		Protocol:       req.Protocol,
+		GRPCAddress:    req.GRPCAddress.ConvertToStatusServiceInfo(),
+		HTTPAddress:    req.HTTPAddress.ConvertToStatusServiceInfo(),
+		Env:            req.Env,
+		Metadata:       req.Metadata,
+		HealthCheckUrl: req.HealthCheckUrl,
+		Weight:         req.Weight,
+		Status:         status,
+		TTLSeconds:     status_model.HeartbeatInterval,
+		IdC:            req.Idc,
+	}
+	return serviceInfo
 }
 
 // ServiceRegisterResponse 服务注册响应
