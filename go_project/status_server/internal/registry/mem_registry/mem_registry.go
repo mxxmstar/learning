@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mxxmstar/learning/status_server/internal/model"
+	status_model "github.com/mxxmstar/learning/pkg/model/status"
 )
 
 const (
@@ -14,13 +14,13 @@ const (
 
 // MemRegistry 内存注册中心
 type MemRegistry struct {
-	services map[string]*model.ServiceInfo // 服务信息存储
+	services map[string]*status_model.ServiceInfo // 服务信息存储
 	mutex    sync.RWMutex
 }
 
 func NewMemRegistry() *MemRegistry {
 	reg := &MemRegistry{
-		services: make(map[string]*model.ServiceInfo),
+		services: make(map[string]*status_model.ServiceInfo),
 	}
 	// 启动一个 goroutine，用于定时清理过期的服务
 	go reg.StartCleanupTask()
@@ -36,7 +36,7 @@ func (r *MemRegistry) StartCleanupTask() {
 	}
 }
 
-func (r *MemRegistry) RegisterService(service *model.ServiceInfo) error {
+func (r *MemRegistry) RegisterService(service *status_model.ServiceInfo) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
@@ -47,13 +47,13 @@ func (r *MemRegistry) RegisterService(service *model.ServiceInfo) error {
 	}
 
 	// service.Status = "active"
-	service.LastHeartbeat = model.GetCurrentTimestamp()
+	service.LastHeartbeat = status_model.GetCurrentTimestamp()
 	r.services[key] = service
 
 	return nil
 }
 
-func (r *MemRegistry) GetService(serviceType, serviceId string) (*model.ServiceInfo, error) {
+func (r *MemRegistry) GetService(serviceType, serviceId string) (*status_model.ServiceInfo, error) {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
 
@@ -70,11 +70,11 @@ func (r *MemRegistry) GetService(serviceType, serviceId string) (*model.ServiceI
 	return service, nil
 }
 
-func (r *MemRegistry) DiscoverServicesByType(serviceType string) ([]*model.ServiceInfo, error) {
+func (r *MemRegistry) DiscoverServicesByType(serviceType string) ([]*status_model.ServiceInfo, error) {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
 
-	var services []*model.ServiceInfo
+	var services []*status_model.ServiceInfo
 	for key, service := range r.services {
 		if service.ServiceType == serviceType {
 			if !service.IsExpired() {
@@ -97,11 +97,11 @@ func (r *MemRegistry) DiscoverServicesByType(serviceType string) ([]*model.Servi
 	return services, nil
 }
 
-func (r *MemRegistry) GetAllServices() ([]*model.ServiceInfo, error) {
+func (r *MemRegistry) GetAllServices() ([]*status_model.ServiceInfo, error) {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
 
-	var services []*model.ServiceInfo
+	var services []*status_model.ServiceInfo
 	for key, service := range r.services {
 		if !service.IsExpired() {
 			services = append(services, service)
@@ -144,7 +144,7 @@ func (r *MemRegistry) KeepAlive(serviceType, serviceId string) error {
 		return errors.New("service not found")
 	}
 
-	service.LastHeartbeat = model.GetCurrentTimestamp()
+	service.LastHeartbeat = status_model.GetCurrentTimestamp()
 	return nil
 }
 

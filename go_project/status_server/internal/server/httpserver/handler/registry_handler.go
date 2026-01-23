@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	status_def "github.com/mxxmstar/learning/pkg/def/status"
+	status_model "github.com/mxxmstar/learning/pkg/model/status"
 	etcd_registry "github.com/mxxmstar/learning/status_server/internal/registry/etcd_registry"
 	mem_registry "github.com/mxxmstar/learning/status_server/internal/registry/mem_registry"
 )
@@ -15,7 +16,7 @@ const (
 	HeartbeatInterval = 60 // TODO: 在配置中配置
 )
 
-var registryInstance model.Registry
+var registryInstance status_model.Registry
 
 func InitRegistry(endpoints []string) error {
 	if EnableRegistry == "memory" {
@@ -121,9 +122,9 @@ func ServiceDeregisterHandler(c *gin.Context) {
 
 // ServiceHeartbeatHandler 服务心跳处理器
 func ServiceHeartbeatHandler(c *gin.Context) {
-	var req status.ServiceHeartbeatRequest
+	var req status_def.ServiceHeartbeatRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, status.ServiceHeartbeatResponse{
+		c.JSON(http.StatusBadRequest, status_def.ServiceHeartbeatResponse{
 			Code:    400,
 			Message: "Invalid request parameters",
 		})
@@ -131,7 +132,7 @@ func ServiceHeartbeatHandler(c *gin.Context) {
 	}
 
 	// 心跳信息会通过租约机制自动更新，这里只是接收心跳
-	c.JSON(http.StatusOK, status.ServiceHeartbeatResponse{
+	c.JSON(http.StatusOK, status_def.ServiceHeartbeatResponse{
 		Code:    200,
 		Message: "Heartbeat received",
 	})
@@ -151,15 +152,14 @@ func CleanupExpiredServices() {
 }
 
 // 辅助函数：转换内部 ServiceInfo 为 proto ServiceInfo
-func convertToServiceInfo(internal *model.ServiceInfo) *status.ServiceInfo {
-	return &status.ServiceInfo{
-		ServiceName: internal.Type,
-		ServiceID:   internal.Id,
-		Protocol:    []string{"http"}, // 简化处理
-		HTTPAddress: &status.HTTPAddress{
-			Host: internal.Host,
-			Port: internal.Port,
-		},
+func convertToServiceInfo(internal *status_model.ServiceInfo) *status_def.ServiceInfo {
+	return &status_def.ServiceInfo{
+		ServiceName: internal.ServiceName,
+		ServiceType: internal.ServiceType,
+		ServiceId:   internal.ServiceId,
+		Protocol:    internal.Protocol,
+		GRPCAddress: internal.GRPCAddress,
+
 		Env:            "default",
 		Tags:           []string{internal.IdC},
 		HealthCheckUrl: "",

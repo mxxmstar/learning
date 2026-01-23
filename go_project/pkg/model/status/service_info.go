@@ -1,26 +1,31 @@
 package status_model
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	HeartbeatInterval = 60 // TODO: 在配置中配置
 )
 
+// ServiceInfo 服务信息,用于status_server内部管理各个服务的信息
 type ServiceInfo struct {
-	ServiceName    string            `json:"service_name" redis:"service_name"`     // 服务名称，如 gate_server_1
-	ServiceType    string            `json:"service_type" redis:"service_type"`     // 服务类型，如：gate, verify, status
-	ServiceId      string            `json:"service_id" redis:"service_id"`         // 服务Id
-	Protocol       []string          `json:"protocol" redis:"protocol"`             // 服务协议，如：grpc, http
-	GRPCAddress    *GRPCAddress      `json:"grpc_address" redis:"grpc_address"`     // grpc服务地址
-	HTTPAddress    *HTTPAddress      `json:"http_address" redis:"http_address"`     // http服务地址
-	Env            string            `json:"env" redis:"env"`                       // 环境，如：prod, test
+	ServiceName    string            `json:"service_name"`                          // 服务名称，如 gate_server_1
+	ServiceType    string            `json:"service_type"`                          // 服务类型，如：gate, verify
+	ServiceId      string            `json:"service_id,omitempty"`                  // 服务Id
+	Protocol       []string          `json:"protocol"`                              // 服务协议，如：["grpc", "http"]
+	GRPCAddress    *GRPCAddress      `json:"grpc_address"`                          // grpc服务地址
+	HTTPAddress    *HTTPAddress      `json:"http_address"`                          // http服务地址
+	Env            string            `json:"env"`                                   // 环境，如：prod, test
+	Tags           []string          `json:"tags,omitempty"`                        // 标签，如：["region=cn-hangzhou", "zone=hangzhou-b"]
 	Metadata       map[string]string `json:"metadata,omitempty"`                    // 元数据，存储详细的服务信息
 	HealthCheckUrl string            `json:"health_check_url"`                      // 健康检查地址
 	Weight         int               `json:"weight"`                                // 权重
+	Enable         bool              `json:"enable"`                                // 是否启用
+	Idc            string            `json:"idc"`                                   // 机房
 	Status         string            `json:"status"`                                // 服务状态 "offline" "online" "active" "inactive"
-	TTLSeconds     int64             `json:"ttl_seconds" redis:"ttl_seconds"`       // 心跳超时允许时间
 	LastHeartbeat  int64             `json:"last_heartbeat" redis:"last_heartbeat"` // 最后心跳时间
-	IdC            string            `json:"idc" redis:"idc"`                       // 数据中心Id
+	TTLSeconds     int64             `json:"ttl_seconds" redis:"ttl_seconds"`       // 心跳超时允许时间
 }
 
 type GRPCAddress struct {

@@ -7,7 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mxxmstar/learning/status_server/internal/model"
+	status_model "github.com/mxxmstar/learning/pkg/model/status"
+
 	"go.etcd.io/etcd/clientv3"
 )
 
@@ -36,7 +37,7 @@ func NewEtcdRegistry(endpoints []string) (*EtcdRegistry, error) {
 	return reg, nil
 }
 
-func (r *EtcdRegistry) RegisterService(service *model.ServiceInfo) error {
+func (r *EtcdRegistry) RegisterService(service *status_model.ServiceInfo) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -105,8 +106,8 @@ func (r *EtcdRegistry) keepAlive(serviceId string, ServiceType string, leaseId c
 			}
 
 			// 更新心跳时间
-			serviceInfo := service.(*model.ServiceInfo)
-			serviceInfo.LastHeartbeat = model.GetCurrentTimestamp()
+			serviceInfo := service.(*status_model.ServiceInfo)
+			serviceInfo.LastHeartbeat = status_model.GetCurrentTimestamp()
 
 			serviceBytes, err := json.Marshal(serviceInfo)
 			if err != nil {
@@ -126,11 +127,11 @@ func (r *EtcdRegistry) keepAlive(serviceId string, ServiceType string, leaseId c
 	}
 }
 
-func (r *EtcdRegistry) GetService(serviceType, serviceId string) (*model.ServiceInfo, error) {
+func (r *EtcdRegistry) GetService(serviceType, serviceId string) (*status_model.ServiceInfo, error) {
 	// 先尝试从本地缓存中获取
 	cacheKey := ServicePrefix + serviceType + "/" + serviceId
 	if cached, ok := r.cache.Load(cacheKey); ok {
-		serviceInfo := cached.(*model.ServiceInfo)
+		serviceInfo := cached.(*status_model.ServiceInfo)
 		if (!serviceInfo.IsExpired()) && (serviceInfo.Status == "online" || serviceInfo.Status == "active") {
 			// 缓存未过期且服务在线
 			return serviceInfo, nil
@@ -155,7 +156,7 @@ func (r *EtcdRegistry) GetService(serviceType, serviceId string) (*model.Service
 		return nil, fmt.Errorf("service %s_%s not found", serviceType, serviceId)
 	}
 
-	var serviceInfo model.ServiceInfo
+	var serviceInfo status_model.ServiceInfo
 	err = json.Unmarshal(getResp.Kvs[0].Value, &serviceInfo)
 	if err != nil {
 		// TODO: 日志记录
@@ -174,7 +175,7 @@ func (r *EtcdRegistry) GetService(serviceType, serviceId string) (*model.Service
 	return &serviceInfo, nil
 }
 
-func (r *EtcdRegistry) DiscoverServicesByType(serviceType string) ([]*model.ServiceInfo, error) {
+func (r *EtcdRegistry) DiscoverServicesByType(serviceType string) ([]*status_model.ServiceInfo, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -185,9 +186,9 @@ func (r *EtcdRegistry) DiscoverServicesByType(serviceType string) ([]*model.Serv
 		return nil, fmt.Errorf("failed to get services by type: %v", err)
 	}
 
-	var services []*model.ServiceInfo
+	var services []*status_model.ServiceInfo
 	for _, kv := range getResp.Kvs {
-		var serviceInfo model.ServiceInfo
+		var serviceInfo status_model.ServiceInfo
 		err := json.Unmarshal(kv.Value, &serviceInfo)
 		if err != nil {
 			// TODO: 日志记录
@@ -211,7 +212,7 @@ func (r *EtcdRegistry) DiscoverServicesByType(serviceType string) ([]*model.Serv
 	return services, nil
 }
 
-func (r *EtcdRegistry) GetAllServices() ([]*model.ServiceInfo, error) {
+func (r *EtcdRegistry) GetAllServices() ([]*status_model.ServiceInfo, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -222,9 +223,9 @@ func (r *EtcdRegistry) GetAllServices() ([]*model.ServiceInfo, error) {
 		return nil, fmt.Errorf("failed to get services by type: %v", err)
 	}
 
-	var services []*model.ServiceInfo
+	var services []*status_model.ServiceInfo
 	for _, kv := range getResp.Kvs {
-		var serviceInfo model.ServiceInfo
+		var serviceInfo status_model.ServiceInfo
 		err := json.Unmarshal(kv.Value, &serviceInfo)
 		if err != nil {
 			// TODO: 日志记录

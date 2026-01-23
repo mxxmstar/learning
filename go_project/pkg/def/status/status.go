@@ -1,8 +1,6 @@
 package status_def
 
-import (
-	status_model "github.com/mxxmstar/learning/pkg/model/status"
-)
+import status_model "github.com/mxxmstar/learning/pkg/model/status"
 
 /**
  * @Description: 定义其他服务向 status_server 发送的请求和响应
@@ -65,12 +63,14 @@ func (req *ServiceRegisterRequest) ConvertToStatusServiceInfo() *status_model.Se
 		GRPCAddress:    req.GRPCAddress.ConvertToStatusServiceInfo(),
 		HTTPAddress:    req.HTTPAddress.ConvertToStatusServiceInfo(),
 		Env:            req.Env,
+		Tags:           req.Tags,
 		Metadata:       req.Metadata,
 		HealthCheckUrl: req.HealthCheckUrl,
 		Weight:         req.Weight,
+		Enable:         req.Enable,
+		Idc:            req.Idc,
 		Status:         status,
 		TTLSeconds:     status_model.HeartbeatInterval,
-		IdC:            req.Idc,
 	}
 	return serviceInfo
 }
@@ -111,7 +111,7 @@ type ServiceDiscoveryRequest struct {
 	Metadata    map[string]string `json:"metadata,omitempty"` // 过滤元数据
 }
 
-// ServiceInfo 服务信息
+// ServiceInfo 服务信息，用于其它服务向status server发送请求和status server返回服务信息
 type ServiceInfo struct {
 	ServiceName    string            `json:"service_name"`       // 服务名称，如 gate_server_1
 	ServiceType    string            `json:"service_type"`       // 服务类型，如：gate, verify
@@ -121,6 +121,7 @@ type ServiceInfo struct {
 	HTTPAddress    *HTTPAddress      `json:"http_address"`       // http服务地址
 	Env            string            `json:"env"`                // 环境，如：prod, test
 	Tags           []string          `json:"tags,omitempty"`     // 标签，如：["region=cn-hangzhou", "zone=hangzhou-b"]
+	Idc            string            `json:"idc"`                // 机房
 	Metadata       map[string]string `json:"metadata,omitempty"` // 元数据，存储详细的服务信息
 	HealthCheckUrl string            `json:"health_check_url"`   // 健康检查地址
 	Weight         int               `json:"weight"`             // 权重
